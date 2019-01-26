@@ -4,7 +4,7 @@ import binascii
 import secrets
 import codecs
 import ecdsa
-from binascii import hexlify, unhexlify
+from binascii import hexlify
 DECIMALS = 1         # create header ???
 MAX_AMOUNT = 6553.5  # 6553.5 from max short 65535 / 10
 

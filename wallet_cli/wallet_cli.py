@@ -126,13 +126,14 @@ class WalletCli(cmd.Cmd):
             resp = requests.post(url=url, json=post_data)
             code = resp.status_code
         except:
-            print("[from: cli]: cannot send request")
+            print("[from: cli]: cannot send request", CEND)
             return False
         if code < 300:
             print(CGREEN)
         for i in status_codes:
             if status_codes[i] == code:
-                print("[from: node]:", i, CEND)
+                print("[from: node]:", i)
+        print(CEND)
 
     def do_send(self, line):
         try:
@@ -151,7 +152,6 @@ class WalletCli(cmd.Cmd):
             tx.calculate_hash()
             signature, verify_key = wallet_utils.signMessage(sender_private, tx.get_hash())
             tx.set_sign(signature, verify_key)
-            print(tx.get_amount())
             if not tx_v.validate_recipient_address(tx.get_unformat_recipient_address()):
                 raise WrongRecipientAddress
             if not tx_v.verify_sender_address(tx.get_unformat_sender_address(), sender_private):
