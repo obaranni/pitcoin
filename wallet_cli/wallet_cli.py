@@ -1,4 +1,7 @@
 import cmd
+import requests
+import json
+import urllib.request
 import os
 os.chdir('/Users/obaranni/x.teams/wallet_cli')
 from wallet_utils import wallet_utils
@@ -44,8 +47,21 @@ class WrongRawTransaction(Exception):
 
 # TODO: to other file
 
-class HelloWorld(cmd.Cmd):
-    intro = "\n\n   Welcome to the wallet_utils command line interface!\n" \
+CRED = '\033[91m'
+CGREEN = '\033[92m'
+CEND = '\033[0m'
+
+
+status_codes = {
+    "Transaction pull i empty": 101,
+    "Transaction pended": 201,
+    "Bad json format": 401,
+    "Bad transaction": 402,
+}
+
+
+class WalletCli(cmd.Cmd):
+    intro = "\n\n   Welcome to the wallet command line interface!\n" \
             "   Enter \"help\" to get the list of commands.\n   Enter" \
             " \"exit\" to exit\n\n"
     prompt = "wallet_cli: "
@@ -101,6 +117,23 @@ class HelloWorld(cmd.Cmd):
         wallet_utils.saveKeyToFile(public_key)
         print_keys_info(decoded_key)
 
+    def do_broadcast(self, line):
+        code = None
+        print(CRED)
+        try:
+            url = 'http://127.0.0.1:5000/transaction/new'
+            post_data = {'serialized_tx': str(TRANSACTIONS[-1])}
+            resp = requests.post(url=url, json=post_data)
+            code = resp.status_code
+        except:
+            print("[from: cli]: cannot send request")
+            return False
+        if code < 300:
+            print(CGREEN)
+        for i in status_codes:
+            if status_codes[i] == code:
+                print("[from: node]:", i, CEND)
+
     def do_send(self, line):
         try:
             sender_private = PRIVATE_KEYS[-1]
@@ -127,9 +160,7 @@ class HelloWorld(cmd.Cmd):
                 raise WrongTransactionSignature
 
             ser_tx =  Serializer(tx).get_serialized_tx()
-
-            # if not tx_pool.new_transaction(ser_tx):
-            #     raise WrongRawTransaction
+            TRANSACTIONS.append(ser_tx)
             print("Your raw transaction:\n", ser_tx, sep="")
         except WrongRawTransaction:
             print("Raw transaction has wrong format")
@@ -149,10 +180,10 @@ class HelloWorld(cmd.Cmd):
             print("The amount should be from 0.1 to 6553.5")
             self.help_send()
             return False
-        # except ValueError:
-        #     print("Wrong amount")
-        #     self.help_send()
-        #     return False
+        except ValueError:
+            print("Wrong amount")
+            self.help_send()
+            return False
         except WrongPublicKey:                       # 84.999800
             print("Wrong public key")
             self.help_send()
@@ -172,7 +203,7 @@ def print_keys_info(private_key):
 
 
 if __name__ == '__main__':
-    HelloWorld().cmdloop()
+    WalletCli().cmdloop()
 
 
 # import storage/wifKey

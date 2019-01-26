@@ -1,23 +1,57 @@
-from flask import  Flask
-from node.blockchain.blockchain import Blockchain
+from flask import  Flask, request, jsonify
+
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain'))
+from blockchain import Blockchain
+
 
 # Create the application instance
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__)
+app.config['DEBUG'] = True
 
 # Create a URL route in our application for "/"
 
 # node = None
 
+status_codes = {
+    "Transaction pull i empty": 101,
+    "Transaction pended": 201,
+    "Bad json format": 401,
+    "Bad transaction": 402,
+}
+
+class NonJSON(Exception):
+    pass
+
 node = Blockchain()
 
-
-@app.route('/transaction/new')
-def new_transaction():
+@app.route('/transaction/pendings')
+def get_pending_transactions():
     global node
-    if not node.submit_tx("008201KWANkjVuwUtSpH9fPKSAHa2D1aXx1bihE01KbittDnJdUPruz9EnFZ13m2wpqANsVWCB78164599d96f40a46498bc47a6fa5d5f8e9fc37b4fe73d59767f45f1de514307cf8e373f072f0de114c2e34fc99b34343aaf234f3f303a44c364cc67f6f8e479aeef5764038a8696702001260c7b6844ae5f272afdee45423255406de67fef78c581832d2a59471aa48a14c6565c3c935eb101d9cbf2c6ee3b073be6e233e890"):
-        return 'bad transaction'
-    return 'nice'
+    code = None
+    try:
+        txs = node.get_pending_txs()
+        if len(txs) < 3:
+            code = status_codes["Transaction pull i empty"]
+            raise Exception
+    except:
+        return jsonify("Transaction pull i empty"), status_codes["Transaction pull i empty"]
+    return txs
+
+@app.route('/transaction/new', methods=['POST', 'HTTP'])
+def set_new_transaction():
+    global node
+    try:
+        if not request.is_json:
+            raise NonJSON
+        data = request.get_json()
+        if not node.submit_tx(data['serialized_tx']):
+            return jsonify(''), status_codes['Bad transaction']
+    except NonJSON:
+        print("Not json request! Declined!")
+        return jsonify(''), status_codes['Bad json format']
+    return jsonify(''), status_codes['Transaction pended']
 
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

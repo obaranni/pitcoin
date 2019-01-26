@@ -1,6 +1,8 @@
 import ecdsa
 import codecs
-from node.blockchain.wallet import wallet
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'wallet'))
+import wallet
 
 
 def validate_recipient_address(address):

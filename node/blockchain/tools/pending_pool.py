@@ -1,9 +1,12 @@
-from node.blockchain.tools.serializer import Deserializer
 from binascii import unhexlify
-from node.blockchain.classes.transaction import Transaction
-from node.blockchain.tools import tx_validator as tx_val
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
+from transaction import Transaction
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+from serializer import  Deserializer
+import tx_validator as tx_val
 
-MEMPOOL_FILE = 'node/blockchain/storage/mempool'
+MEMPOOL_FILE = os.path.dirname(__file__) + '/../storage/mempool'
 
 
 class TxPool:
