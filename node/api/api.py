@@ -25,6 +25,21 @@ class NonJSON(Exception):
 
 node = Blockchain()
 
+@app.route('/mine', methods=['POST', 'GET', 'HTTP'])
+def set_mine():
+    global node
+    node.change_mine_mode()
+    if node.mine_mode:
+        return jsonify('[from: node]: mining mode on')
+    return jsonify('[from: node]: mining mode off')
+
+
+@app.route('/chain')
+def get_full_chain():
+    global node
+
+    pass
+
 @app.route('/transaction/pendings')
 def get_pending_transactions():
     global node

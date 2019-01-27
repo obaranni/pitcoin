@@ -1,9 +1,9 @@
 import hashlib
-import codecs
-import binascii
 
 DECIMALS = 1
 ADDRESS_LEN = 35
+AWARD = 50
+COINBASE_SENDER = "0000000000000000000000000000000000000000000000000000000000000000"
 
 class Transaction:
 
@@ -70,7 +70,7 @@ class Transaction:
 
 
 class CoinbaseTransaction(Transaction):
-    # def __init__(self, recipient, amount=50):
-    #     self.recipient = recipient
-    #     self.amount = amount
+    def __init__(self, recipient, amount=AWARD):
+        amount = "{0:0{1}x}".format(int(amount), 4)
+        Transaction.__init__(self, COINBASE_SENDER, recipient, amount)
     pass

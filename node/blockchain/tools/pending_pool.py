@@ -15,7 +15,13 @@ class TxPool:
         pass
 
     def save_to_mempool(self, set_tx):
-        file = open(MEMPOOL_FILE, "a+")
+        file = open(MEMPOOL_FILE, "r+")
+        first_line = file.readline()
+        file.close()
+        if len(first_line) < 200:
+            file = open(MEMPOOL_FILE, "w+")
+        else:
+            file = open(MEMPOOL_FILE, "a+")
         file.write("%s\n" % set_tx)
         file.close()
 
@@ -43,3 +49,23 @@ class TxPool:
             count -= 1
         file.close()
         return last_lines
+
+    def get_pool_size(self):
+        file = open(MEMPOOL_FILE, "r+")
+        result = sum(1 for line in file)
+        file.close()
+        return result
+
+    def delete_last_txs(self, count):
+        file = open(MEMPOOL_FILE, "r+")
+        if self.get_pool_size() > count:
+            all_lines = file.readlines()[:-count]
+        else:
+            all_lines = ['']
+        file.close()
+
+        file = open(MEMPOOL_FILE, "w")
+        for line in all_lines:
+            file.write("%s\n" % line)
+        file.close()
+

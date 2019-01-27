@@ -1,5 +1,6 @@
 import cmd
 import requests
+import json
 
 status_codes = {
     "Transaction pull i empty": 101,
@@ -8,15 +9,21 @@ status_codes = {
     "Bad transaction": 402,
 }
 
+CRED = '\033[91m'
+CGREEN = '\033[92m'
+CEND = '\033[0m'
 
 class WalletCli(cmd.Cmd):
     intro = "\n\n   Welcome to the miner command line interface!\n" \
             "   Enter \"help\" to get the list of commands.\n   Enter" \
             " \"exit\" to exit\n\n"
-    prompt = "wallet_cli: "
+    prompt = "miner_cli: "
 
-    def help_new(self):
-        print("\nnew help:\nCreates a new key pair\n")
+    def help_add_node(self):
+        print("\nadd_node help:\nAdding new trusted node\nExample: \"add-node 127.0.0.1:5000\"\n")
+
+    def help_mine(self):
+        print("\nmine help:\nStart producing blocks\n")
 
     def help_help(self):
         print("\nhelp help:\nList available commands with \"help\" or detailed help with \"help *command_name*\".\n")
@@ -28,16 +35,18 @@ class WalletCli(cmd.Cmd):
     def do_exit(self, line):
         return True
 
-    def do_new(self, line):
-        private_key, public_key, address = wallet_utils.newKeyPair()
-        PRIVATE_KEYS.append(private_key)
-        wallet_utils.saveKeyToFile(address)
-        print_keys_info(private_key)
+    def do_add_node(self, line):
+        pass
 
-
-def print_keys_info(private_key):
-    print("Private key: \"", private_key, "\"", sep="")
-    print("Look for your public key at storage/address.txt line %d" % int(wallet_utils.getFileLines()))
+    def do_mine(self, line):
+        url = 'http://127.0.0.1:5000/mine'
+        resp = requests.post(url=url, json=[''])
+        resp = str(resp.json())
+        if resp.find('off') > 0:
+            print(CRED)
+        else:
+            print(CGREEN)
+        print(resp, CEND)
 
 
 if __name__ == '__main__':
