@@ -1,3 +1,4 @@
+pitcoin/**/*__pycache__
 env_pitcoin
 env_pitcoin/*
 .idea
