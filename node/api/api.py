@@ -25,7 +25,7 @@ class NonJSON(Exception):
 
 node = Blockchain()
 
-@app.route('/mine', methods=['POST', 'GET', 'HTTP'])
+@app.route('/mine', methods=['GET'])
 def set_mine():
     global node
     node.change_mine_mode()
@@ -34,16 +34,23 @@ def set_mine():
     return jsonify('[from: node]: mining mode off')
 
 
-@app.route('/chain')
+@app.route('/chain/length', methods=['GET'])
+def get_chain_length():
+    global node
+    return jsonify({'chain_length': node.get_chain_length()})
+
+@app.route('/chain', methods=['GET'])
 def get_full_chain():
     global node
 
-    pass
+    bc = node.get_full_blockchain()
+    if len(bc) < 10:
+        return jsonify({'blocks': None})
+    return bc
 
 @app.route('/transaction/pendings')
 def get_pending_transactions():
     global node
-    code = None
     try:
         txs = node.get_pending_txs()
         if len(txs) < 3:

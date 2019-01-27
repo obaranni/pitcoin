@@ -22,6 +22,12 @@ class WalletCli(cmd.Cmd):
     def help_add_node(self):
         print("\nadd_node help:\nAdding new trusted node\nExample: \"add-node 127.0.0.1:5000\"\n")
 
+    def help_getchain(self):
+        print("\ngetchain help:\nGet blockchain from node db\n")
+
+    def help_getchainlen(self):
+        print("\ngetchain help:\nGet blockchain len from node db\n")
+
     def help_mine(self):
         print("\nmine help:\nStart producing blocks\n")
 
@@ -35,12 +41,24 @@ class WalletCli(cmd.Cmd):
     def do_exit(self, line):
         return True
 
+    def do_getchainlen(self, line):
+        url = 'http://127.0.0.1:5000/chain/length'
+        resp = requests.get(url=url, json=[''])
+        resp = str(resp.json())
+        print(resp)
+
+    def do_getchain(self, line):
+        url = 'http://127.0.0.1:5000/chain'
+        resp = requests.get(url=url, json=[''])
+        resp = str(resp.json())
+        print(resp)
+
     def do_add_node(self, line):
         pass
 
     def do_mine(self, line):
         url = 'http://127.0.0.1:5000/mine'
-        resp = requests.post(url=url, json=[''])
+        resp = requests.get(url=url, json=[''])
         resp = str(resp.json())
         if resp.find('off') > 0:
             print(CRED)

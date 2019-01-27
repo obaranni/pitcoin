@@ -4,10 +4,10 @@
     <option name="enabled" value="true" />
   </component>
   <component name="NewModuleRootManager">
-    <content url="file://$USER_HOME$/wallet_cli" />
     <content url="file://$MODULE_DIR$/miner_cli" />
     <content url="file://$MODULE_DIR$/node/api" />
     <content url="file://$MODULE_DIR$/node/blockchain" />
+    <content url="file://$MODULE_DIR$/wallet_cli" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

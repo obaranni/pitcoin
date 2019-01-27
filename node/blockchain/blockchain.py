@@ -19,17 +19,51 @@ BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
 class Blockchain:
     def __init__(self):
         self.blocks = []
-        self.mine_mode = True # False
-        self.load_chain()
+        self.mine_mode = False
+        self.consensus_mode = False
 
     def change_mine_mode(self):
         self.mine_mode = not self.mine_mode
+        if self.mine_mode:
+            self.consensus_mode = False
+            self.start_mine()
+
+    def change_consensus_mode(self):
+        self.consensus_mode = not self.consensus_mode
+        if self.consensus_mode:
+            self.mine_mode = False
 
     def mine(self, block, complexity=BASE_COMPLEXITY):
         while block.hash[:complexity] != "0" * complexity:
             block.nonce += 1
             block.calculate_hash()
         return block
+
+    def cut_transactions(self):
+        tx_pool = TxPool()
+        pool_size = tx_pool.get_pool_size()
+        if pool_size < TRANSACTIONS_TO_MINE:
+            print("No enough txs in pool:", pool_size)
+            return False
+        print("Start mine. Txs in pool:", pool_size)
+
+        txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
+        tx_pool.set_txs(txs[TRANSACTIONS_TO_MINE:])
+        return txs
+
+    def start_mine(self):
+        txs = self.cut_transactions()
+        if not txs:
+            return False
+        if len(self.blocks) == 0:
+            print(txs)
+            self.save_block(self.genesis_block(txs[-TRANSACTIONS_TO_MINE:]))
+
+        while True:
+            txs = self.cut_transactions()
+            if not txs:
+                break
+            self.create_block(txs[-TRANSACTIONS_TO_MINE:])
 
     def load_chain(self):
         # do i have other nodes?
@@ -38,7 +72,7 @@ class Blockchain:
         # okey, so lets begin from genesis
         if not self.mine_mode:
             return False
-        block = self.mine(self.genesis_block())
+        block = self.mine(self.genesis_block(None))
         self.save_block(block)
 
     def resolve_conflicts(self):
@@ -67,8 +101,10 @@ class Blockchain:
         block.calculate_hash()
         self.save_block(self.mine(block))
 
-    def genesis_block(self):
-        genesis_block = Block(self.get_timestamp(), "0" * 64, [])
+    def genesis_block(self, txs):
+        if txs is None:
+            txs = []
+        genesis_block = Block(self.get_timestamp(), "0" * 64, txs)
         genesis_block.calculate_merkle_root()
         genesis_block.calculate_hash()
         return genesis_block
@@ -78,12 +114,8 @@ class Blockchain:
         result = tx_pool.new_transaction(new_tx)
         if not result:
             return False
-        pool_size = tx_pool.get_pool_size()
-        if pool_size >= TRANSACTIONS_TO_MINE:
-            print("Start mine. Txs in pool:", pool_size)
-            print(tx_pool.get_last_txs(TRANSACTIONS_TO_MINE))
-            self.create_block(tx_pool.get_last_txs(TRANSACTIONS_TO_MINE))
-            tx_pool.delete_last_txs(TRANSACTIONS_TO_MINE)
+        if self.mine_mode:
+            self.start_mine()
         return result
 
     def get_pending_txs(self):
@@ -93,5 +125,20 @@ class Blockchain:
         current_dt = datetime.datetime.now()
         return int(current_dt.timestamp())
 
-    def 
+    def create_db_if_not_exist(self):
+        file = open(BLOCKCHAIN_DB, 'a+')
+        file.close()
 
+    def get_full_blockchain(self):
+        self.create_db_if_not_exist()
+        result_line = ''
+        file = open(BLOCKCHAIN_DB, 'r+')
+        lines = file.readlines()
+        for line in lines:
+            result_line += line + '\n'
+        file.close()
+        print(result_line)
+        return result_line
+
+    def get_chain_length(self):
+        return len(self.blocks)

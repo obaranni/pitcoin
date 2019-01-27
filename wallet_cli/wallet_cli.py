@@ -1,8 +1,9 @@
 import cmd
 import requests
 import json
-import urllib.request
 import os
+from random import  randint, randrange
+import time
 os.chdir('/Users/obaranni/x.teams/wallet_cli')
 from wallet_utils import wallet_utils
 from tools.serializer import Serializer
@@ -89,6 +90,29 @@ class WalletCli(cmd.Cmd):
     def do_exit(self, line):
         return True
 
+    def do_random(self, line):
+
+        private_key, public_key, address = wallet_utils.newKeyPair()
+        i = 0
+        if len(line) == 0:
+            line = "200"
+        while i < int(line):
+            amount = randrange(0, 65535)
+            private_key2, public_key2, address2 = wallet_utils.newKeyPair()
+            PRIVATE_KEYS.append(private_key)
+            pitoshi = "{0:0{1}x}".format(amount, 4)
+            tx = Transaction(address, address2,
+                         bytes(pitoshi.encode('utf-8')).decode('utf-8'))
+            tx.calculate_hash()
+            signature, verify_key = wallet_utils.signMessage(private_key, tx.get_hash())
+            tx.set_sign(signature, verify_key)
+            secs = randint(0, 3)
+            time.sleep(secs)
+            ser_tx = Serializer(tx).get_serialized_tx()
+            TRANSACTIONS.append(ser_tx)
+            self.do_broadcast(line)
+            i += 1
+
     def do_new(self, line):
         private_key, public_key, address = wallet_utils.newKeyPair()
         PRIVATE_KEYS.append(private_key)
@@ -118,7 +142,6 @@ class WalletCli(cmd.Cmd):
         print_keys_info(decoded_key)
 
     def do_broadcast(self, line):
-        code = None
         print(CRED)
         try:
             url = 'http://127.0.0.1:5000/transaction/new'
@@ -148,7 +171,7 @@ class WalletCli(cmd.Cmd):
             pitoshi = "{0:0{1}x}".format(int(amount * int(pow(10, DECIMALS))), 4)
             sender_pub = wallet_utils.fullSettlementPublicAddress(sender_private)
             tx = Transaction(sender_pub, recipient,
-                                         bytes(pitoshi.encode('utf-8')).decode('utf-8'))
+                             bytes(pitoshi.encode('utf-8')).decode('utf-8'))
             tx.calculate_hash()
             signature, verify_key = wallet_utils.signMessage(sender_private, tx.get_hash())
             tx.set_sign(signature, verify_key)
@@ -159,7 +182,7 @@ class WalletCli(cmd.Cmd):
             if not tx_v.validate_signature(tx, (wallet_utils.getPublickKey(sender_private)).decode('utf-8')[2:]):
                 raise WrongTransactionSignature
 
-            ser_tx =  Serializer(tx).get_serialized_tx()
+            ser_tx = Serializer(tx).get_serialized_tx()
             TRANSACTIONS.append(ser_tx)
             print("Your raw transaction:\n", ser_tx, sep="")
         except WrongRawTransaction:

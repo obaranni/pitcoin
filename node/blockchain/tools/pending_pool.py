@@ -14,7 +14,11 @@ class TxPool:
     def __init__(self):
         pass
 
+    def create_pool_if_not_exist(self):
+        file = open(MEMPOOL_FILE, "a+")
+        file.close()
     def save_to_mempool(self, set_tx):
+        self.create_pool_if_not_exist()
         file = open(MEMPOOL_FILE, "r+")
         first_line = file.readline()
         file.close()
@@ -40,7 +44,8 @@ class TxPool:
         return True
 
     def get_last_txs(self, count):
-        file = open(MEMPOOL_FILE, "r+")
+        self.create_pool_if_not_exist()
+        file = open(MEMPOOL_FILE, "r")
         all_lines = file.readlines()
         last_lines = []
         while count > 0:
@@ -51,21 +56,16 @@ class TxPool:
         return last_lines
 
     def get_pool_size(self):
-        file = open(MEMPOOL_FILE, "r+")
+        self.create_pool_if_not_exist()
+        file = open(MEMPOOL_FILE, "r")
         result = sum(1 for line in file)
         file.close()
         return result
 
-    def delete_last_txs(self, count):
-        file = open(MEMPOOL_FILE, "r+")
-        if self.get_pool_size() > count:
-            all_lines = file.readlines()[:-count]
-        else:
-            all_lines = ['']
-        file.close()
-
-        file = open(MEMPOOL_FILE, "w")
-        for line in all_lines:
-            file.write("%s\n" % line)
+    def set_txs(self, txs):
+        self.create_pool_if_not_exist()
+        file = open(MEMPOOL_FILE, "w+")
+        for tx in txs:
+            file.write("%s\n" % tx)
         file.close()
 
