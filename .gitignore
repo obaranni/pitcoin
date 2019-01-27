@@ -1,2 +1,4 @@
 env_pitcoin
+env_pitcoin/*
 .idea
+.DS_Store
