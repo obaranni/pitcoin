@@ -3,7 +3,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain', 'too
 from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
 from serialized_txs_to_json import txs_to_json
-from blocks_to_json import convert_blocks
+from blocks_to_json import convert_blocks_to
+from blocks_from_json import convert_blocks_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
 from transaction import CoinbaseTransaction
@@ -15,6 +16,7 @@ TRANSACTIONS_TO_MINE = 4
 BASE_COMPLEXITY = 2
 MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
+NODE_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'peers')
 
 class Blockchain:
     def __init__(self):
@@ -25,13 +27,8 @@ class Blockchain:
     def change_mine_mode(self):
         self.mine_mode = not self.mine_mode
         if self.mine_mode:
-            self.consensus_mode = False
+            self.load_chain()
             self.start_mine()
-
-    def change_consensus_mode(self):
-        self.consensus_mode = not self.consensus_mode
-        if self.consensus_mode:
-            self.mine_mode = False
 
     def mine(self, block, complexity=BASE_COMPLEXITY):
         while block.hash[:complexity] != "0" * complexity:
@@ -39,31 +36,24 @@ class Blockchain:
             block.calculate_hash()
         return block
 
+    def start_mine(self):
+        while True:
+            txs = self.cut_transactions()
+            if not txs:
+                break
+            self.create_block(txs[-TRANSACTIONS_TO_MINE:])
+
     def cut_transactions(self):
         tx_pool = TxPool()
         pool_size = tx_pool.get_pool_size()
         if pool_size < TRANSACTIONS_TO_MINE:
-            print("No enough txs in pool:", pool_size)
+            # print("No enough txs in pool:", pool_size)
             return False
         print("Start mine. Txs in pool:", pool_size)
 
         txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
         tx_pool.set_txs(txs[TRANSACTIONS_TO_MINE:])
         return txs
-
-    def start_mine(self):
-        txs = self.cut_transactions()
-        if not txs:
-            return False
-        if len(self.blocks) == 0:
-            print(txs)
-            self.save_block(self.genesis_block(txs[-TRANSACTIONS_TO_MINE:]))
-
-        while True:
-            txs = self.cut_transactions()
-            if not txs:
-                break
-            self.create_block(txs[-TRANSACTIONS_TO_MINE:])
 
     def load_chain(self):
         # do i have other nodes?
@@ -72,23 +62,41 @@ class Blockchain:
         # okey, so lets begin from genesis
         if not self.mine_mode:
             return False
-        block = self.mine(self.genesis_block(None))
+        txs = self.cut_transactions()
+        if not txs:
+            txs = None
+        block = self.mine(self.genesis_block(txs))
         self.save_block(block)
+
+    def change_consensus_mode(self):
+        self.consensus_mode = not self.consensus_mode
+        if self.consensus_mode:
+            self.mine_mode = False
 
     def resolve_conflicts(self):
         pass
 
-    def is_valid_chain(self):
-        pass
+    def read_blocks(self):
+        file = open(BLOCKCHAIN_DB)
 
-    def add_node(self):
+        convert_blocks_from(file)
+        # lines = file.readlines()
+        # blocks_json = ""
+        # for line in lines:
+        #     blocks_json += line[:-1]
+        #
+        # print(blocks_json)
+        file.close()
+
+    def is_valid_chain(self):
         pass
 
     def save_blocks(self):
         file = open(BLOCKCHAIN_DB, 'w+')
-        json_blocks = convert_blocks(self.blocks)
+        json_blocks = convert_blocks_to(self.blocks)
         json.dump(json_blocks, file, indent=4)
         file.close()
+        self.read_blocks()####
 
     def save_block(self, block):
         self.blocks.append(block)
@@ -142,3 +150,10 @@ class Blockchain:
 
     def get_chain_length(self):
         return len(self.blocks)
+
+    def add_node(self, ip):
+        file = open(NODE_FILE, 'a+')
+        print(ip)
+        file.write("%s\n" % str(ip))
+        file.close()
+        return True

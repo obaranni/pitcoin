@@ -4,6 +4,7 @@ import json
 
 status_codes = {
     "Transaction pull i empty": 101,
+    "Node added": 102,
     "Transaction pended": 201,
     "Bad json format": 401,
     "Bad transaction": 402,
@@ -12,6 +13,8 @@ status_codes = {
 CRED = '\033[91m'
 CGREEN = '\033[92m'
 CEND = '\033[0m'
+
+node_ip = 'http://127.0.0.1:5000'
 
 class WalletCli(cmd.Cmd):
     intro = "\n\n   Welcome to the miner command line interface!\n" \
@@ -41,23 +44,37 @@ class WalletCli(cmd.Cmd):
     def do_exit(self, line):
         return True
 
+    def do_nodeip(self, line):
+        global node_ip
+        node_ip = line
+
     def do_getchainlen(self, line):
-        url = 'http://127.0.0.1:5000/chain/length'
+        global node_ip
+        url = node_ip + '/chain/length'
         resp = requests.get(url=url, json=[''])
         resp = str(resp.json())
         print(resp)
 
     def do_getchain(self, line):
-        url = 'http://127.0.0.1:5000/chain'
+        global node_ip
+        url = node_ip + '/chain'
         resp = requests.get(url=url, json=[''])
         resp = str(resp.json())
         print(resp)
 
-    def do_add_node(self, line):
-        pass
+    def do_addnode(self, line):
+        if len(line) < 1:
+            self.help_add_node()
+            return True
+        global node_ip
+        url = node_ip + '/addnode'
+        json = {'node_ip': line}
+        resp = requests.post(url=url, json=json)
+        # resp = str(resp.json())
 
     def do_mine(self, line):
-        url = 'http://127.0.0.1:5000/mine'
+        global node_ip
+        url = node_ip + '/mine'
         resp = requests.get(url=url, json=[''])
         resp = str(resp.json())
         if resp.find('off') > 0:

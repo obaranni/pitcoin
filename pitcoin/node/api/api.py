@@ -15,6 +15,7 @@ app.config['DEBUG'] = True
 
 status_codes = {
     "Transaction pull i empty": 101,
+    "Node added": 102,
     "Transaction pended": 201,
     "Bad json format": 401,
     "Bad transaction": 402,
@@ -33,6 +34,19 @@ def set_mine():
         return jsonify('[from: node]: mining mode on')
     return jsonify('[from: node]: mining mode off')
 
+@app.route('/addnode', methods=['POST'])
+def add_node():
+    global node
+    try:
+        if not request.is_json:
+            raise NonJSON
+        data = request.get_json()
+        if not node.add_node(data['node_ip']):
+            return jsonify(''), status_codes['Bad node ip']
+    except NonJSON:
+        print("Not json request! Declined!")
+        return jsonify(''), status_codes['Bad json format']
+    return jsonify(''), status_codes['Node added']
 
 @app.route('/chain/length', methods=['GET'])
 def get_chain_length():

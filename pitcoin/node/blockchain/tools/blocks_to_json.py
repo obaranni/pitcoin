@@ -8,7 +8,7 @@ import json
 # merkle_root
 # transactions
 
-def convert_blocks(blocks):
+def convert_blocks_to(blocks):
     json_blocks = json.JSONDecoder().decode(
         json.dumps([json.JSONDecoder().decode(
             json.dumps({'id': str(i), 'prev_hash': str(blocks[i].previous_hash),
