@@ -11,6 +11,8 @@ MINER_PRIV_WIF_FILE = os.path.join(os.path.dirname(__file__),  '..', 'storage', 
 class Block:
     def __init__(self, timestamp, previous_hash,
                  transactions, nonce=0):
+        if transactions is None:
+            transactions = []
         self.timestamp = timestamp
         self.previous_hash = previous_hash
         self.transactions = transactions
@@ -35,7 +37,6 @@ class Block:
         signature, verify_key = signMessage(miner_priv, coinbase_tx.get_hash())
         coinbase_tx.set_sign(signature, verify_key)
         serializer = Serializer(coinbase_tx)
-        serializer.serialize(coinbase_tx)
         self.transactions.append(serializer.get_serialized_tx())
 
     def validate_transactions(self): # validates all transactions

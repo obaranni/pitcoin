@@ -54,6 +54,8 @@ CEND = '\033[0m'
 
 status_codes = {
     "Transaction pull i empty": 101,
+    "Node added": 102,
+    "Cannot start mine mode": 103,
     "Transaction pended": 201,
     "Bad json format": 401,
     "Bad transaction": 402,

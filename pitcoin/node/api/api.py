@@ -16,6 +16,7 @@ app.config['DEBUG'] = True
 status_codes = {
     "Transaction pull i empty": 101,
     "Node added": 102,
+    "Cannot start mine mode": 103,
     "Transaction pended": 201,
     "Bad json format": 401,
     "Bad transaction": 402,
@@ -28,11 +29,15 @@ node = Blockchain()
 
 @app.route('/mine', methods=['GET'])
 def set_mine():
-    global node
-    node.change_mine_mode()
-    if node.mine_mode:
-        return jsonify('[from: node]: mining mode on')
-    return jsonify('[from: node]: mining mode off')
+        global node
+
+    # try:
+        node.change_mine_mode()
+        if node.mine_mode:
+            return jsonify('[from: node]: mining mode on')
+        return jsonify('[from: node]: mining mode off')
+    # except:
+    #     return jsonify('[from: node]:'), status_codes["Cannot start mine mode"]
 
 @app.route('/addnode', methods=['POST'])
 def add_node():

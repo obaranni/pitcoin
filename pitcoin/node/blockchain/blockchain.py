@@ -18,6 +18,7 @@ MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
 NODE_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'peers')
 
+
 class Blockchain:
     def __init__(self):
         self.blocks = []
@@ -47,12 +48,10 @@ class Blockchain:
         tx_pool = TxPool()
         pool_size = tx_pool.get_pool_size()
         if pool_size < TRANSACTIONS_TO_MINE:
-            # print("No enough txs in pool:", pool_size)
             return False
         print("Start mine. Txs in pool:", pool_size)
-
         txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
-        tx_pool.set_txs(txs[TRANSACTIONS_TO_MINE:])
+        tx_pool.set_txs(txs[:TRANSACTIONS_TO_MINE])
         return txs
 
     def load_chain(self):
@@ -78,15 +77,9 @@ class Blockchain:
 
     def read_blocks(self):
         file = open(BLOCKCHAIN_DB)
-
-        convert_blocks_from(file)
-        # lines = file.readlines()
-        # blocks_json = ""
-        # for line in lines:
-        #     blocks_json += line[:-1]
-        #
-        # print(blocks_json)
+        blocks = convert_blocks_from(file)
         file.close()
+        return blocks
 
     def is_valid_chain(self):
         pass
@@ -96,7 +89,6 @@ class Blockchain:
         json_blocks = convert_blocks_to(self.blocks)
         json.dump(json_blocks, file, indent=4)
         file.close()
-        self.read_blocks()####
 
     def save_block(self, block):
         self.blocks.append(block)
@@ -110,8 +102,6 @@ class Blockchain:
         self.save_block(self.mine(block))
 
     def genesis_block(self, txs):
-        if txs is None:
-            txs = []
         genesis_block = Block(self.get_timestamp(), "0" * 64, txs)
         genesis_block.calculate_merkle_root()
         genesis_block.calculate_hash()

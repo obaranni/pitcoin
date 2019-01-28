@@ -5,7 +5,5 @@ from block import Block
 
 def convert_blocks_from(file_json):
     block_dict = json.load(file_json)
-
-    blocks = [Block(i['timestamp'], i['prev_hash'], i['timestamp'], i['nonce']) for i in block_dict['blocks']]
-
-
+    blocks = [Block(i['timestamp'], i['prev_hash'], i['transactions'], i['nonce']) for i in block_dict['blocks']]
+    return blocks

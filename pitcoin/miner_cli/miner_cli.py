@@ -5,6 +5,7 @@ import json
 status_codes = {
     "Transaction pull i empty": 101,
     "Node added": 102,
+    "Cannot start mine mode": 103,
     "Transaction pended": 201,
     "Bad json format": 401,
     "Bad transaction": 402,
@@ -15,6 +16,10 @@ CGREEN = '\033[92m'
 CEND = '\033[0m'
 
 node_ip = 'http://127.0.0.1:5000'
+
+
+
+
 
 class WalletCli(cmd.Cmd):
     intro = "\n\n   Welcome to the miner command line interface!\n" \
@@ -66,22 +71,33 @@ class WalletCli(cmd.Cmd):
         if len(line) < 1:
             self.help_add_node()
             return True
-        global node_ip
-        url = node_ip + '/addnode'
-        json = {'node_ip': line}
-        resp = requests.post(url=url, json=json)
-        # resp = str(resp.json())
+        try:
+            global node_ip
+            url = node_ip + '/addnode'
+            json = {'node_ip': line}
+            resp = requests.post(url=url, json=json)
+            resp = str(resp.json())
+        except:
+            print("[from: cli]: cannot send request")
 
     def do_mine(self, line):
         global node_ip
-        url = node_ip + '/mine'
-        resp = requests.get(url=url, json=[''])
-        resp = str(resp.json())
-        if resp.find('off') > 0:
-            print(CRED)
-        else:
-            print(CGREEN)
-        print(resp, CEND)
+        try:
+            url = node_ip + '/mine'
+            resp = requests.get(url=url, json=[''])
+
+            # resp = str(resp.json())
+            if str(resp.json()).find('off') > 0:
+                print(CRED, end="")
+            else:
+                print(CGREEN, end="")
+        except requests.exceptions.ConnectionError:
+            print(CRED, "[from: cli]: cannot send request", CEND, sep="")
+            return False
+        except json.decoder.JSONDecodeError:
+            print(CRED, "[from: cli]: cannot decode request as json", CEND, sep="")
+            return False
+        print(resp.json(), CEND)
 
 
 if __name__ == '__main__':
