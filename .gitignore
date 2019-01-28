@@ -1,3 +1,6 @@
+pitcoin/node/blockchain/storage/mempool
+pitcoin/node/blockchain/storage/blocks
+pitcoin/node/blockchain/storage/peers
 pitcoin/**/*__pycache__
 env_pitcoin
 env_pitcoin/*
