@@ -1,6 +1,7 @@
 import cmd
 import requests
 import json
+import re
 
 status_codes = {
     "Transaction pull i empty": 101,
@@ -18,7 +19,8 @@ CEND = '\033[0m'
 node_ip = 'http://127.0.0.1:5000'
 
 
-
+class WrongIp(Exception):
+    pass
 
 
 class WalletCli(cmd.Cmd):
@@ -70,23 +72,29 @@ class WalletCli(cmd.Cmd):
     def do_addnode(self, line):
         if len(line) < 1:
             self.help_add_node()
-            return True
+            return False
         try:
             global node_ip
             url = node_ip + '/addnode'
+
+            line = re.findall(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b", line)
+            if len(line) < 1:
+                raise WrongIp
+
             json = {'node_ip': line}
-            resp = requests.post(url=url, json=json)
-            resp = str(resp.json())
-        except:
-            print("[from: cli]: cannot send request")
+            requests.post(url=url, json=json)
+            print(CGREEN, "[from: cli]: node ip added", CEND, sep="")
+        except WrongIp:
+            print(CRED, "[from: cli]: wrong node ip", CEND, sep="")
+        except requests.exceptions.ConnectionError:
+            print(CRED, "[from: cli]: cannot send request", CEND, sep="")
+
 
     def do_mine(self, line):
         global node_ip
         try:
             url = node_ip + '/mine'
             resp = requests.get(url=url, json=[''])
-
-            # resp = str(resp.json())
             if str(resp.json()).find('off') > 0:
                 print(CRED, end="")
             else:

@@ -1,6 +1,6 @@
 from flask import  Flask, request, jsonify
 
-import sys, os
+import sys, os, time, threading
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain'))
 from blockchain import Blockchain
 
@@ -8,7 +8,6 @@ from blockchain import Blockchain
 # Create the application instance
 app = Flask(__name__)
 app.config['DEBUG'] = True
-
 # Create a URL route in our application for "/"
 
 # node = None
@@ -27,17 +26,15 @@ class NonJSON(Exception):
 
 node = Blockchain()
 
+
 @app.route('/mine', methods=['GET'])
 def set_mine():
-        global node
+    global node
 
-    # try:
-        node.change_mine_mode()
-        if node.mine_mode:
-            return jsonify('[from: node]: mining mode on')
-        return jsonify('[from: node]: mining mode off')
-    # except:
-    #     return jsonify('[from: node]:'), status_codes["Cannot start mine mode"]
+    node.change_mine_mode()
+    if node.mine_mode:
+        return jsonify('[from: node]: mining mode on')
+    return jsonify('[from: node]: mining mode off')
 
 @app.route('/addnode', methods=['POST'])
 def add_node():
