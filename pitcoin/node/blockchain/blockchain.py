@@ -4,7 +4,7 @@ from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
 from serialized_txs_to_json import txs_to_json
 from blocks_to_json import convert_blocks_to
-from blocks_from_json import convert_blocks_from
+from blocks_from_json import convert_blocks_from, convert_last_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
 from transaction import CoinbaseTransaction
@@ -51,6 +51,9 @@ class Blockchain:
         return txs[:TRANSACTIONS_TO_MINE]
 
     def start_mining(self):
+        if len(self.blocks) < 1:
+            self.load_chain()
+        print(self.blocks[0].block_id)
         flag = 0
         while True:
             txs = self.cut_transactions()
@@ -67,25 +70,46 @@ class Blockchain:
         txs = self.cut_transactions()
         if not txs:
             txs = None
-            print("[from: node]: Empty txs pool. Generate genesis block with one tx")
+            print("[from: node]: Not enough txs in pool. Generating genesis block with coinbase tx only")
         block = self.mining_hash(self.genesis_block(txs))
         self.save_block(block)
 
-    def load_block_from_db(self):
+    # def load_block_from_db(self):
+    #         self.create_db_if_not_exist()
+    #     # try:
+    #         file = open(BLOCKCHAIN_DB, 'r')
+    #         lines = file.readlines()
+    #         file_str = ''
+    #         for line in lines:
+    #             file_str += line
+    #         blocks = convert_blocks_from(file_str)
+    #         file.close()
+    #     # except json.decoder.JSONDecodeError:
+    #     #     return None
+    #         return blocks
+
+    def load_last_block_from_db(self):
         self.create_db_if_not_exist()
         try:
             file = open(BLOCKCHAIN_DB, 'r')
-            blocks_json = convert_blocks_from(file)
+            lines = file.readlines()
+            file_str = ''
+            for line in lines:
+                file_str += line
+            block = convert_last_block_from(file_str)
             file.close()
-        except json.decoder.JSONDecodeError:
+        except:
             return None
-        return blocks_json
+        return block
+
+
+
 
     def load_chain(self):
         print("[from: node]: Node started successfully")
         print("[from: node]: Consensus mode: off")
         print("[from: node]: Mining mode: off")
-        blocks = self.load_block_from_db()
+        blocks = [self.load_last_block_from_db()]
         if blocks is None:
             print("[from: node]: Database is empty")
         else:
@@ -123,24 +147,28 @@ class Blockchain:
         pass
 
     def save_blocks(self):
-        file = open(BLOCKCHAIN_DB, 'w+')
+        self.create_db_if_not_exist()
+        file = open(BLOCKCHAIN_DB, 'a+')
         json_blocks = convert_blocks_to(self.blocks)
-        json.dump(json_blocks, file, indent=4)
+        for block in json_blocks:
+            file.write("%s" % json.dumps(block, indent=4))
+        file.write('\n')
         file.close()
 
     def save_block(self, block):
         self.blocks.append(block)
+        self.blocks = [self.blocks[-1]]
         self.save_blocks()
 
     def create_block(self, txs):
         prev_hash = self.blocks[-1].hash
-        block = Block(self.get_timestamp(), prev_hash, txs)
+        block = Block(self.get_timestamp(), prev_hash, txs, self.blocks[-1].block_id + 1)
         block.calculate_merkle_root()
         block.calculate_hash()
         self.save_block(self.mining_hash(block))
 
     def genesis_block(self, txs):
-        genesis_block = Block(self.get_timestamp(), "0" * 64, txs)
+        genesis_block = Block(self.get_timestamp(), "0" * 64, txs, 0)
         genesis_block.calculate_merkle_root()
         genesis_block.calculate_hash()
         return genesis_block
@@ -178,7 +206,7 @@ class Blockchain:
         return result_line
 
     def get_chain_length(self):
-        return len(self.blocks)
+        return self.blocks[-1].block_id + 1
 
     def create_peers_if_not_exist(self):
         file = open(PEERS_FILE, 'a+')
