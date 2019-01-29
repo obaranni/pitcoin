@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, datetime, json, requests
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain', 'tools'))
 from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
@@ -8,9 +8,6 @@ from blocks_from_json import convert_blocks_from, convert_last_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
 from transaction import CoinbaseTransaction
-import datetime
-import json
-from flask import request
 
 TRANSACTIONS_TO_MINE = 4
 BASE_COMPLEXITY = 2
@@ -23,7 +20,7 @@ class Blockchain:
     def __init__(self):
         self.blocks = []
         self.mine_mode = False
-        self.consensus_mode = False
+        self.consensus_mode = True
         self.load_chain()
 
     def change_mine_mode(self):
@@ -102,27 +99,44 @@ class Blockchain:
             return None
         return block
 
+    def peers_chain_lengths(self, peers):
+        i = 0
+        lengths = []
+        while i in range(0, len(peers)):
+            try:
+                resp = requests.get(url=peers[i], json=['/chain'])
+                lengths.append(str(resp.json()))
+            except requests.exceptions.InvalidURL:
+                lengths.append(-1)
+            i += 1
+        print(lengths)
 
 
+    def connect_with_peers(self):
+        self.create_peers_if_not_exist()
+        file = open(PEERS_FILE, 'r')
+        peers = file.readlines()
+        self.peers_chain_lengths(peers)
+        print(peers)
+        file.close()
 
     def load_chain(self):
         print("[from: node]: Node started successfully")
         print("[from: node]: Consensus mode: off")
         print("[from: node]: Mining mode: off")
-        blocks = [self.load_last_block_from_db()]
+        blocks = self.load_last_block_from_db()
+        print("[from: node]: Loading blocks from database...")
         if blocks is None:
             print("[from: node]: Database is empty")
         else:
-            print("[from: node]: Loading blocks from database...")
-            self.blocks = blocks
+            self.blocks = [blocks]
             print("[from: node]: Done")
             print("[from: node]: Chain height:", self.get_chain_length())
         print("[from: node]: transactions in pool:", TxPool().get_pool_size())
 
-        # do i have other nodes?
-        # do i have stored blocks?
-        # no! you dont
-        # okey, so lets begin from genesis
+        if self.consensus_mode:
+            self.connect_with_peers()
+
         if not self.mine_mode:
             return False
         if len(self.blocks) < 1:
