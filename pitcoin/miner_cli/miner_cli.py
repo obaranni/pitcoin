@@ -30,13 +30,19 @@ class WalletCli(cmd.Cmd):
     prompt = "miner_cli: "
 
     def help_add_node(self):
-        print("\nadd_node help:\nAdding new trusted node\nExample: \"add-node 127.0.0.1:5000\"\n")
+        print("\nadd_node help:\nAdding new trusted node\nExample: \"addnode 127.0.0.1:5000\"\n")
 
     def help_getchain(self):
         print("\ngetchain help:\nGet blockchain from node db\n")
 
+    def help_endpoin(self):
+        print("\nendpoint help:\nChange node\nExample: \"endpoint 127.0.0.1:5000\"\n")
+
+    def help_getblock(self):
+        print("\ngetblock help:\nGets block by id\nExample: \"getblock 456\"\n")
+
     def help_getchainlen(self):
-        print("\ngetchain help:\nGet blockchain len from node db\n")
+        print("\ngetchainlen help:\nGet blockchain len from node db\n")
 
     def help_mine(self):
         print("\nmine help:\nStart producing blocks\n")
@@ -51,10 +57,6 @@ class WalletCli(cmd.Cmd):
     def do_exit(self, line):
         return True
 
-    def do_nodeip(self, line):
-        global node_ip
-        node_ip = line
-
     def do_getchainlen(self, line):
         global node_ip
         url = node_ip + '/chain/length'
@@ -68,6 +70,27 @@ class WalletCli(cmd.Cmd):
         resp = requests.get(url=url, json=[''])
         resp = str(resp.json())
         print(resp)
+
+    def do_endpoint(self, line):
+        if len(line) < 1:
+            self.help_endpoin()
+            return False
+        try:
+            global node_ip
+
+            line = re.findall(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b", line)
+            if len(line) < 1:
+                raise WrongIp
+
+            node_ip = 'http://' + line[0]
+            url = node_ip + '/chain/length'
+            requests.post(url=url, json='')
+            print(CGREEN, "[from: cli]: connected", CEND, sep="")
+        except WrongIp:
+            print(CRED, "[from: cli]: wrong node ip", CEND, sep="")
+            self.help_endpoin()
+        except requests.exceptions.ConnectionError:
+            print(CRED, "[from: cli]: cannot connect", CEND, sep="")
 
     def do_addnode(self, line):
         if len(line) < 1:
@@ -106,6 +129,39 @@ class WalletCli(cmd.Cmd):
             print(CRED, "[from: cli]: cannot decode request as json", CEND, sep="")
             return False
         print(resp.json(), CEND)
+
+    def do_consensus(self, line):
+        global node_ip
+        try:
+            url = node_ip + '/consensus'
+            resp = requests.get(url=url, json=[''])
+            if str(resp.json()).find('off') > 0:
+                print(CRED, end="")
+            else:
+                print(CGREEN, end="")
+        except requests.exceptions.ConnectionError:
+            print(CRED, "[from: cli]: cannot send request", CEND, sep="")
+            return False
+        except json.decoder.JSONDecodeError:
+            print(CRED, "[from: cli]: cannot decode request as json", CEND, sep="")
+            return False
+        print(resp.json(), CEND)
+
+    def do_getblock(self, line):
+        if len(line) < 1 or not line[0].isdigit():
+            self.help_getblock()
+            return False
+        try:
+            global node_ip
+            url = node_ip + '/getblock'
+            params = (('id', line[0]),)
+            resp = requests.get(url=url, params=params)
+            if str(resp.json()).find("error") == -1:
+                print(CGREEN, "[from: cli]: ", resp.json(), CEND, sep="")
+            else:
+                print(CRED, "[from: cli]: ", resp.json(), CEND, sep="")
+        except requests.exceptions.ConnectionError:
+            print(CRED, "[from: cli]: cannot send request", CEND, sep="")
 
 
 if __name__ == '__main__':
