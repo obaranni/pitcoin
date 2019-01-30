@@ -1,6 +1,5 @@
 from flask import  Flask, request, jsonify
-
-import sys, os, time, threading
+import sys, os, json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain'))
 from blockchain import Blockchain
 
@@ -21,10 +20,12 @@ status_codes = {
     "Bad transaction": 402,
 }
 
+node = None
+CONFIG_FILE = os.path.join(os.path.dirname(__file__),  '..', 'config')
+
+
 class NonJSON(Exception):
     pass
-
-node = Blockchain()
 
 
 @app.route('/mine', methods=['GET'])
@@ -35,6 +36,17 @@ def set_mine():
     if node.mine_mode:
         return jsonify('[from: node]: mining mode on')
     return jsonify('[from: node]: mining mode off')
+
+
+@app.route('/consensus', methods=['GET'])
+def set_consensus():
+    global node
+
+    node.change_consensus_mode()
+    if node.consensus_mode:
+        return jsonify('[from: node]: consensus mode on')
+    return jsonify('[from: node]: consensus mode off')
+
 
 @app.route('/addnode', methods=['POST'])
 def add_node():
@@ -50,19 +62,29 @@ def add_node():
         return jsonify(''), status_codes['Bad json format']
     return jsonify(''), status_codes['Node added']
 
+
 @app.route('/chain/length', methods=['GET'])
 def get_chain_length():
     global node
     return jsonify({'chain_length': node.get_chain_length()})
 
+
+@app.route('/getblock', methods=['GET'])
+def get_block():
+        global node
+        id = request.args.get('id')
+        if id is None or not id.isdigit() or int(id) < 0:
+            return jsonify({'block': 'None', 'error:':'block id should be a positive number, \"/getblock?id=28\"'})
+        block, block_str = node.get_block_by_id(id)
+        if not block:
+            return jsonify({'block': 'None', 'error': 'Block doesn\'t exist'})
+        return jsonify({'block': block_str})
+
+
 @app.route('/chain', methods=['GET'])
 def get_full_chain():
-    global node
+    return jsonify('Please use /getblock?id=*iterator* to get all blocks')
 
-    bc = node.get_full_blockchain()
-    if len(bc) < 10:
-        return jsonify({'blocks': None})
-    return bc
 
 @app.route('/transaction/pendings')
 def get_pending_transactions():
@@ -75,6 +97,7 @@ def get_pending_transactions():
     except:
         return jsonify("Transaction pull i empty"), status_codes["Transaction pull i empty"]
     return txs
+
 
 @app.route('/transaction/new', methods=['POST', 'HTTP'])
 def set_new_transaction():
@@ -90,6 +113,40 @@ def set_new_transaction():
         return jsonify(''), status_codes['Bad json format']
     return jsonify(''), status_codes['Transaction pended']
 
-# If we're running in stand alone mode, run the application
+
+def print_bad_config():
+    print("[from: node]: Failed!")
+    print("[from: node]: Bad json format in config file!")
+    print("[from: node]: Example:\n{\n\t\"host_ip\": \n\t\""
+          "127.0.0.1:5000\",\n\t\"mining_mode\": \"off\",\n"
+          "\t\"consensus_mode\": \"off\",\n\t\"trusted_peer"
+          "s\": [\n\t\t\"127.0.0.1:5010\",\n\t\t\"127.0.0.1:"
+          "5011\",\n\t\t\"127.0.0.1:5012\"\n\t]\n}")
+
+def main():
+    global node
+    if not os.path.exists(CONFIG_FILE):
+        print("[from: node]: Failed!")
+        print("[from: node]: Create config file first!")
+        return False
+    try:
+        conf_file = open(CONFIG_FILE, 'r')
+        config = json.load(conf_file)
+        conf_file.close()
+        host = config['host_ip'].split(':')[0]
+        port = config['host_ip'].split(':')[1]
+        cons = config['consensus_mode']
+        mine = config['mining_mode']
+        peers = config['trusted_peers']
+        node = Blockchain()
+        if not node.set_configs(mine, cons, peers):
+            print("[from: node]: Bad configuration file parameters!")
+            return False
+    except json.decoder.JSONDecodeError:
+        print_bad_config()
+        return False
+    app.run(host=host, port=port)
+
+
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port='5000')
+    main()

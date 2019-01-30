@@ -1,7 +1,7 @@
 import cmd
 import requests
 import json
-import os
+import os, re
 from random import  randint, randrange
 import time
 from wallet_utils import wallet_utils
@@ -15,7 +15,13 @@ MAX_AMOUNT = 6553.5  # 6553.5 from max short 65535 / 10
 PRIVATE_KEYS = []
 TRANSACTIONS = []
 
+node_ip = 'http://127.0.0.1:5000'
+
+
 # TODO: to other file
+
+class WrongIp(Exception):
+    pass
 
 
 class WrongLineArgs(Exception):
@@ -82,6 +88,9 @@ class WalletCli(cmd.Cmd):
         print("\nhelp help:\nList available commands with \"help\" or detailed help with \"help *command_name*\".\n")
         return True
 
+    def help_endpoin(self):
+        print("\nendpoint help:\nChange node\nExample: \"endpoint 127.0.0.1:5000\"\n")
+
     def help_send(self):
         print("\nsend help:\nSends transaction\nExample:\nsend   *Recipient Address*   *Amount*\n")
 
@@ -143,9 +152,11 @@ class WalletCli(cmd.Cmd):
         print_keys_info(decoded_key)
 
     def do_broadcast(self, line):
+        global node_ip
+
         print(CRED)
         try:
-            url = 'http://127.0.0.1:5000/transaction/new'
+            url = node_ip + '/transaction/new'
             post_data = {'serialized_tx': str(TRANSACTIONS[-1])}
             resp = requests.post(url=url, json=post_data)
             code = resp.status_code
@@ -220,6 +231,26 @@ class WalletCli(cmd.Cmd):
             print("Generate or import private key first")
             return False
 
+    def do_endpoint(self, line):
+        if len(line) < 1:
+            self.help_endpoin()
+            return False
+        try:
+            global node_ip
+
+            line = re.findall(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b", line)
+            if len(line) < 1:
+                raise WrongIp
+
+            node_ip = 'http://' + line[0]
+            url = node_ip + '/chain/length'
+            requests.post(url=url, json='')
+            print(CGREEN, "[from: cli]: connected", CEND, sep="")
+        except WrongIp:
+            print(CRED, "[from: cli]: wrong node ip", CEND, sep="")
+            self.help_endpoin()
+        except requests.exceptions.ConnectionError:
+            print(CRED, "[from: cli]: cannot connect", CEND, sep="")
 
 def print_keys_info(private_key):
     print("Private key: \"", private_key, "\"", sep="")

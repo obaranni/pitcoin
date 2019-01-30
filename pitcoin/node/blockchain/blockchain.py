@@ -4,11 +4,10 @@ from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
 from serialized_txs_to_json import txs_to_json
 from blocks_to_json import convert_blocks_to
-from blocks_from_json import convert_blocks_from, convert_last_block_from
+from blocks_from_json import convert_last_block_from, convert_by_id_block_from, get_str_block_by_id, convert_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
 from transaction import CoinbaseTransaction
-
 TRANSACTIONS_TO_MINE = 4
 BASE_COMPLEXITY = 2
 MAX_TX_TO_GET = 1000
@@ -20,8 +19,27 @@ class Blockchain:
     def __init__(self):
         self.blocks = []
         self.mine_mode = False
-        self.consensus_mode = True
+        self.consensus_mode = False
         self.load_chain()
+
+    def set_configs(self, mine, consensus, peers):
+        try:
+            print("[from: node]: Configuring a node from a configuration file...")
+            if consensus == "on":
+                self.change_consensus_mode()
+            if mine == "on":
+                self.change_mine_mode()
+            file = open(PEERS_FILE, 'w+')
+            one_line_peers = ''
+            for peer in peers:
+                one_line_peers += peer + '\n'
+            file.write("%s" % one_line_peers)
+            file.close()
+            print("[from: node]: Done")
+        except:
+            print("[from: node]: Failed!")
+            return False
+        return True
 
     def change_mine_mode(self):
         self.mine_mode = not self.mine_mode
@@ -71,20 +89,6 @@ class Blockchain:
         block = self.mining_hash(self.genesis_block(txs))
         self.save_block(block)
 
-    # def load_block_from_db(self):
-    #         self.create_db_if_not_exist()
-    #     # try:
-    #         file = open(BLOCKCHAIN_DB, 'r')
-    #         lines = file.readlines()
-    #         file_str = ''
-    #         for line in lines:
-    #             file_str += line
-    #         blocks = convert_blocks_from(file_str)
-    #         file.close()
-    #     # except json.decoder.JSONDecodeError:
-    #     #     return None
-    #         return blocks
-
     def load_last_block_from_db(self):
         self.create_db_if_not_exist()
         try:
@@ -93,31 +97,78 @@ class Blockchain:
             file_str = ''
             for line in lines:
                 file_str += line
-            block = convert_last_block_from(file_str)
+            if len(file_str) > 50:
+                block = convert_last_block_from(file_str)
+            else:
+                block = None
             file.close()
         except:
             return None
         return block
 
+    def lookfor_best_chain(self, lengths):
+        best = -1
+        for i in range(0, len(lengths)):
+            if int(lengths[i]) > best:
+                best = i
+        return best
+
+    def fetch_best_chain(self, peer):
+        try:
+            i = 0
+            self.blocks = []
+            while True:
+                params = (('id', str(i)),)
+                url = 'http://' + peer[:-1] + '/getblock'
+                resp = requests.get(url=url, params=params)
+                if resp is None or str(resp.json()).find("error") != -1:
+                    break
+                block = convert_block_from((resp.json())['block'])
+                self.save_block(block)
+                i += 1
+            print("[from: node]: Fetching done. New chain length:", self.get_chain_length())
+        except requests.exceptions.InvalidURL:
+            print("[from: node]: Failed! Invalid url!")
+        except requests.exceptions.ConnectionError:
+            print("[from: node]: Failed! Connection error!")
+        except:
+            print("[from: node]: Failed! Connection error!")
+
     def peers_chain_lengths(self, peers):
         i = 0
         lengths = []
+        connections = 0
+        print("[from: node]: Connecting to peers...")
         while i in range(0, len(peers)):
             try:
-                resp = requests.get(url=peers[i], json=['/chain'])
-                lengths.append(str(resp.json()))
+                peer = peers[i][:-1]
+                print("[from: node]: Connecting to peer %s ..." % peer)
+                resp = requests.get(url='http://' + peer + '/chain/length', json=[''])
+                lengths.append(resp.json()['chain_length'])
+                print("[from: node]: Connected! New peer chain length:", lengths[-1])
+                connections = 1
             except requests.exceptions.InvalidURL:
                 lengths.append(-1)
-            i += 1
-        print(lengths)
+                print("[from: node]: Failed! Invalid url!")
+            except requests.exceptions.ConnectionError:
+                lengths.append(-1)
+                print("[from: node]: Failed! Connection error!")
 
+            i += 1
+        if connections:
+            best_index = self.lookfor_best_chain(lengths)
+            print(int(lengths[best_index]) , self.get_chain_length())
+            if int(lengths[best_index]) > self.get_chain_length():
+                print("[from: node]: Fetching chain from peer...")
+                self.fetch_best_chain(peers[best_index])
+                return True
+        print("[from: node]: Using own chain")
 
     def connect_with_peers(self):
         self.create_peers_if_not_exist()
         file = open(PEERS_FILE, 'r')
         peers = file.readlines()
         self.peers_chain_lengths(peers)
-        print(peers)
         file.close()
 
     def load_chain(self):
@@ -132,30 +183,25 @@ class Blockchain:
             self.blocks = [blocks]
             print("[from: node]: Done")
             print("[from: node]: Chain height:", self.get_chain_length())
-        print("[from: node]: transactions in pool:", TxPool().get_pool_size())
+        print("[from: node]: Transactions in pool:", TxPool().get_pool_size())
+
+
+
 
         if self.consensus_mode:
             self.connect_with_peers()
-
         if not self.mine_mode:
             return False
-        if len(self.blocks) < 1:
+        else:
             self.create_chain()
-
 
     def change_consensus_mode(self):
         self.consensus_mode = not self.consensus_mode
         if self.consensus_mode:
-            self.mine_mode = False
+            self.connect_with_peers()
 
     def resolve_conflicts(self):
         pass
-
-    def read_blocks(self):
-        file = open(BLOCKCHAIN_DB)
-        blocks = convert_blocks_from(file)
-        file.close()
-        return blocks
 
     def is_valid_chain(self):
         pass
@@ -220,7 +266,21 @@ class Blockchain:
         return result_line
 
     def get_chain_length(self):
+        if len(self.blocks) == 0:
+            return 0
         return self.blocks[-1].block_id + 1
+
+    def get_block_by_id(self, id):
+        self.create_db_if_not_exist()
+        result_line = ''
+        file = open(BLOCKCHAIN_DB, 'r')
+        lines = file.readlines()
+        for line in lines:
+            result_line += line
+        block_json = get_str_block_by_id(result_line, id)
+        block = convert_by_id_block_from(result_line, id)
+        file.close()
+        return block, block_json
 
     def create_peers_if_not_exist(self):
         file = open(PEERS_FILE, 'a+')
@@ -232,7 +292,6 @@ class Blockchain:
         file = open(PEERS_FILE, 'r+')
         lines = file.readlines()
         for line in lines:
-            print(new_peer, line)
             if new_peer == line[:-1]:
                 return True
         return False
@@ -243,6 +302,8 @@ class Blockchain:
             return True
         file = open(PEERS_FILE, 'a+')
         print("[from: node]: New peer added: ", ('http://' + ip[0]))
-        file.write("%s\n" % ('http://' + ip[0]))
+        file.write("%s\n" % (ip[0]))
         file.close()
+        if self.consensus_mode:
+            self.connect_with_peers()
         return True
