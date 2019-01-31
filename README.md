@@ -231,4 +231,4 @@ miner_cli: exit
 ```
 ## Running a local virtual test network
 In order to run a virtual testnet, you need to start each node in the testnet folder. In order for a node to receive and send blocks to other nodes, enable consensus mode. In order for new blocks to appear, start the mining mode. Fill nodes with transactions using the random command. For convenience, you can divide the terminal into several parts:
-![example img](https://xteams-gitlab.unit.ua/xteams/module-2-obaranni.git/README_IMGS/example_img_1.png)
+![example img](https://github.com/obaranni/pitcoin/blob/master/README_IMGS/example_img1.png)
