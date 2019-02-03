@@ -134,6 +134,7 @@ def print_bad_config():
           "s\": [\n\t\t\"127.0.0.1:5010\",\n\t\t\"127.0.0.1:"
           "5011\",\n\t\t\"127.0.0.1:5012\"\n\t]\n}")
 
+
 def main():
     global node
     if not os.path.exists(CONFIG_FILE):
