@@ -64,12 +64,14 @@ def compressPublicKey(pubKey):
 
 
 def getAddresOfPublicKey(pubKey, testnet=0):
+    print("pubkey1", pubKey)
     sha = hashlib.new('sha256', codecs.decode(pubKey, 'hex')).digest()
     ripemd = hashlib.new('ripemd160', sha).digest()
     if testnet:
         encr_pub = codecs.decode("6f", 'hex') + ripemd
     else:
         encr_pub = codecs.decode("00", 'hex') + ripemd
+    print("pubkey2", encr_pub.hex())
     checksum = hashlib.new('sha256', hashlib.new('sha256', encr_pub).digest()).digest()
     return base58.b58encode(codecs.decode(codecs.encode(encr_pub + checksum[:4], 'hex'), 'hex')).decode('utf-8')
 
@@ -117,6 +119,7 @@ def readKeyFromFile(filePath):
 
 def newKeyPair(testnet=0):
     privKey = createPrivateKey()
+    privKey = "884a1c97e9feb617ece801bb13ad7251854f9f0821f2f61237accbe085be58af"
     pubKey = getPublickKey(privKey)
     compPubKey = compressPublicKey(pubKey)
     address = getAddresOfPublicKey(compPubKey, testnet)

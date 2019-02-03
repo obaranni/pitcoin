@@ -6,7 +6,7 @@ from blockchain import Blockchain
 
 # Create the application instance
 app = Flask(__name__)
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 # Create a URL route in our application for "/"
 
 # node = None
@@ -78,6 +78,15 @@ def add_node():
 def get_chain_length():
     global node
     return jsonify({'chain_length': node.get_chain_length()})
+
+
+@app.route('/block/last', methods=['GET'])
+def get_last_block():
+        global node
+        block, block_str = node.get_block_by_id(id=-1)
+        if not block:
+            return jsonify({'block': 'None', 'error': 'Block doesn\'t exist'})
+        return jsonify({'block': block_str})
 
 
 @app.route('/getblock', methods=['GET'])
