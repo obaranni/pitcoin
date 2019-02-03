@@ -154,7 +154,7 @@ class WalletCli(cmd.Cmd):
     def do_broadcast(self, line):
         global node_ip
 
-        print(CRED)
+        print(CRED, end="")
         try:
             url = node_ip + '/transaction/new'
             post_data = {'serialized_tx': str(TRANSACTIONS[-1])}
@@ -164,11 +164,11 @@ class WalletCli(cmd.Cmd):
             print("[from: cli]: cannot send request", CEND)
             return False
         if code < 300:
-            print(CGREEN)
+            print(CGREEN, end="")
         for i in status_codes:
             if status_codes[i] == code:
                 print("[from: node]:", i)
-        print(CEND)
+        print(CEND, end="")
 
     def do_send(self, line):
         try:

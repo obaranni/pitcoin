@@ -1,6 +1,6 @@
 {
     "host_ip": "127.0.0.1:5000",
-    "mining_mode": "off",
+    "mining_mode": "on",
     "consensus_mode": "on",
     "trusted_peers": [
         "127.0.0.1:5050",

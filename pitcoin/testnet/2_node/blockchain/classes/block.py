@@ -10,16 +10,17 @@ MINER_PRIV_WIF_FILE = os.path.join(os.path.dirname(__file__),  '..', 'storage', 
 
 class Block:
     def __init__(self, timestamp, previous_hash,
-                 transactions, block_id, nonce=0, block_hash=None):
+                 transactions, block_id, nonce=0, block_hash=None, merkle_root=None):
         if transactions is None:
             transactions = []
         self.timestamp = timestamp
         self.previous_hash = previous_hash
         self.transactions = transactions
-        self.set_coinbase_transaction(MINER_PRIV_WIF_FILE)
+        if block_hash is None:
+            self.set_coinbase_transaction(MINER_PRIV_WIF_FILE)
         self.nonce = nonce
         self.block_id = block_id
-        self.merkle_root = None
+        self.merkle_root = merkle_root
         self.hash = block_hash
 
     def calculate_merkle_root(self):

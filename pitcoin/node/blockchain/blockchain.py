@@ -12,15 +12,18 @@ TRANSACTIONS_TO_MINE = 4
 BASE_COMPLEXITY = 4
 MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
+TMP_BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'tmp_blocks')
 PEERS_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'peers')
 
 
 class Blockchain:
+
     def __init__(self):
         self.blocks = []
         self.mine_mode = False
         self.consensus_mode = False
         self.load_chain()
+        self.challenge = True
 
     def set_configs(self, mine, consensus, peers):
         try:
@@ -49,12 +52,6 @@ class Blockchain:
         else:
             print("[from: node]: Mining mode: off")
 
-    def mining_hash(self, block, complexity=BASE_COMPLEXITY):
-        while block.hash[:complexity] != "0" * complexity:
-            block.nonce += 1
-            block.calculate_hash()
-        return block
-
     def cut_transactions(self):
         tx_pool = TxPool()
         pool_size = tx_pool.get_pool_size()
@@ -66,21 +63,29 @@ class Blockchain:
         return txs[:TRANSACTIONS_TO_MINE]
 
     def send_new_block_alert(self, peers):
-        try:
-            for peer in peers:
+        print("\n[from: node]: Reporting to other nodes about new block")
+        connections = 0
+        for peer in peers:
+            try:
                 url = 'http://' + peer[:-1] + '/newblock'
                 requests.get(url=url)
-        except requests.exceptions.InvalidURL:
-            print("[from: node]: Failed! Invalid url!")
-        except requests.exceptions.ConnectionError:
-            print("[from: node]: Failed! Connection error!")
-        except:
-            print("[from: node]: Failed! Connection error!")
+                connections = 1
+            except requests.exceptions.InvalidURL:
+                pass
+            except requests.exceptions.ConnectionError:
+                pass
+            except:
+                pass
+        if connections:
+            print("[from: node]: Report completed\n")
+        else:
+            print("[from: node]: No connection with nodes\n")
 
     def start_mining(self):
         if len(self.blocks) < 1:
             self.create_chain()
         flag = 0
+        self.challenge = True
         while True:
             txs = self.cut_transactions()
             if not txs:
@@ -89,21 +94,23 @@ class Blockchain:
                 return False
             else:
                 flag = 1
-            self.create_block(txs[:TRANSACTIONS_TO_MINE])
+            if not self.create_block(txs[:TRANSACTIONS_TO_MINE]):
+                break
         print("[from: node]: Mining is over. Current blockchain height:", self.get_chain_length())
         self.connect_with_peers(get_chain=False)
+        self.challenge = True
 
     def create_chain(self):
         print("[from: node]: Creating genesis block")
         txs = None
         block = self.mining_hash(self.genesis_block(txs))
-        self.save_block(block)
+        self.save_block(block, BLOCKCHAIN_DB)
         print("[from: node]: Done. Current blockchain height:", self.get_chain_length())
 
-    def load_last_block_from_db(self, as_str=0):
-        self.create_db_if_not_exist()
+    def load_last_block_from_db(self, db_file, as_str=0):
+        self.create_db_if_not_exist(db_file)
         try:
-            file = open(BLOCKCHAIN_DB, 'r')
+            file = open(db_file, 'r')
             lines = file.readlines()
             file_str = ''
             for line in lines:
@@ -118,26 +125,80 @@ class Blockchain:
         return block
 
     def lookfor_best_chain(self, lengths):
-        best = -1
+        best_index = 0
+        best_len = -1
         for i in range(0, len(lengths)):
-            if int(lengths[i]) > best:
-                best = i
-        return best
+            if int(lengths[i]) > best_len:
+                best_len = lengths[i]
+                best_index = i
+        return best_index
+
+    def take_the_chain_as_own(self, append):
+        self.create_db_if_not_exist(BLOCKCHAIN_DB)
+        if append:
+            new_blocks = open(TMP_BLOCKCHAIN_DB, 'r')
+            new_blocks_lines = new_blocks.readlines()
+            new_blocks.close()
+            old_blocks = open(BLOCKCHAIN_DB, 'a')
+            old_blocks.writelines(new_blocks_lines)
+            old_blocks.close()
+            os.remove(TMP_BLOCKCHAIN_DB)
+        else:
+            os.remove(BLOCKCHAIN_DB)
+            os.rename(TMP_BLOCKCHAIN_DB, BLOCKCHAIN_DB)
+
+    def do_i_need_all_chain(self, peer):
+        if len(self.blocks) < 1:
+            return 1
+        last_block_id = self.blocks[-1].block_id
+        try:
+            params = (('height', str(last_block_id + 1)),)
+            url = 'http://' + peer[:-1] + '/block'
+            resp = requests.get(url=url, params=params)
+            if resp is None or str(resp.json()).find("error") != -1:
+                return 1
+            block = convert_block_from((resp.json())['block'])
+            if self.blocks[-1].hash == block.hash:
+                print("[from: node]: Part of the chains is the same,"
+                      " downloading starting from the block", self.blocks[-1].block_id + 1)
+                return self.blocks[-1].block_id + 2
+            else:
+                print("[from: node]: There are no matches in the chains. "
+                      "Downloading the chain from scratch")
+                return 1
+        except requests.exceptions.InvalidURL:
+            return 1
+        except requests.exceptions.ConnectionError:
+            return 1
+        except:
+            return 1
 
     def fetch_best_chain(self, peer):
         try:
-            i = 0
+            i = self.do_i_need_all_chain(peer)
+            if i == 1:
+                append = 0
+            else:
+                append = 1
             self.blocks = []
             while True:
-                params = (('id', str(i)),)
-                url = 'http://' + peer[:-1] + '/getblock'
+                params = (('height', str(i)),)
+                url = 'http://' + peer[:-1] + '/block'
                 resp = requests.get(url=url, params=params)
                 if resp is None or str(resp.json()).find("error") != -1:
                     break
                 block = convert_block_from((resp.json())['block'])
-                self.save_block(block)
+                self.save_block(block, TMP_BLOCKCHAIN_DB)
                 i += 1
-            print("[from: node]: Fetching done. New chain length:", self.get_chain_length())
+            if self.is_valid_chain(TMP_BLOCKCHAIN_DB):
+                print("[from: node]: Chain is valid. Using as own")
+                self.take_the_chain_as_own(append)
+            else:
+                print("[from: node]: Invalid chain! Using own")
+                self.blocks = []
+                self.blocks = self.load_last_block_from_db(BLOCKCHAIN_DB)
+                return False
+            print("[from: node]: Fetching done. New chain length:", self.get_chain_length(), end="\n\n")
         except requests.exceptions.InvalidURL:
             print("[from: node]: Failed! Invalid url!")
         except requests.exceptions.ConnectionError:
@@ -186,9 +247,7 @@ class Blockchain:
 
     def load_chain(self):
         print("\n[from: node]: Node started successfully")
-        # print("[from: node]: Consensus mode: off")
-        # print("[from: node]: Mining mode: off")
-        blocks = self.load_last_block_from_db()
+        blocks = self.load_last_block_from_db(BLOCKCHAIN_DB)
         print("[from: node]: Loading blocks from database...")
         if blocks is None:
             print("[from: node]: Database is empty")
@@ -214,29 +273,41 @@ class Blockchain:
     def resolve_conflicts(self):
         pass
 
-    def is_valid_chain(self):
-        pass
+    def is_valid_chain(self, db_file):
+        return True
 
-    def save_blocks(self):
-        self.create_db_if_not_exist()
-        file = open(BLOCKCHAIN_DB, 'a+')
+    def save_blocks(self, db_file):
+        self.create_db_if_not_exist(db_file)
+        file = open(db_file, 'a+')
         json_blocks = convert_blocks_to(self.blocks)
         for block in json_blocks:
             file.write("%s" % json.dumps(block, indent=4))
         file.write('\n')
         file.close()
 
-    def save_block(self, block):
+    def save_block(self, block, db_file):
         self.blocks.append(block)
         self.blocks = [self.blocks[-1]]
-        self.save_blocks()
+        self.save_blocks(db_file)
+
+    def mining_hash(self, block, complexity=BASE_COMPLEXITY):
+        while block.hash[:complexity] != "0" * complexity:
+            if not self.challenge:
+                return None
+            block.nonce += 1
+            block.calculate_hash()
+        return block
 
     def create_block(self, txs):
         prev_hash = self.blocks[-1].hash
         block = Block(self.get_timestamp(), prev_hash, txs, self.blocks[-1].block_id + 1)
         block.calculate_merkle_root()
         block.calculate_hash()
-        self.save_block(self.mining_hash(block))
+        new_block = self.mining_hash(block)
+        if new_block is None:
+            return False
+        self.save_block(new_block, BLOCKCHAIN_DB)
+        return True
 
     def genesis_block(self, txs):
         genesis_block = Block(self.get_timestamp(), "0" * 64, txs, 0)
@@ -262,14 +333,14 @@ class Blockchain:
         current_dt = datetime.datetime.now()
         return int(current_dt.timestamp())
 
-    def create_db_if_not_exist(self):
-        file = open(BLOCKCHAIN_DB, 'a+')
+    def create_db_if_not_exist(self, db_file):
+        file = open(db_file, 'a+')
         file.close()
 
-    def get_full_blockchain(self):
-        self.create_db_if_not_exist()
+    def get_full_blockchain(self, db_file=BLOCKCHAIN_DB):
+        self.create_db_if_not_exist(db_file)
         result_line = ''
-        file = open(BLOCKCHAIN_DB, 'r')
+        file = open(db_file, 'r')
         lines = file.readlines()
         for line in lines:
             result_line += line + '\n'
@@ -281,12 +352,15 @@ class Blockchain:
             return 0
         return self.blocks[-1].block_id + 1
 
-    def get_block_by_id(self, id):
-        self.create_db_if_not_exist()
+    def get_block_by_id(self, id, db_file=BLOCKCHAIN_DB):
+        self.create_db_if_not_exist(db_file)
         if id == -1:
-            id = self.blocks[-1].block_id
+            if len(self.blocks) < 1:
+                return None, None
+            else:
+                id = self.blocks[-1].block_id
         result_line = ''
-        file = open(BLOCKCHAIN_DB, 'r')
+        file = open(db_file, 'r')
         lines = file.readlines()
         for line in lines:
             result_line += line

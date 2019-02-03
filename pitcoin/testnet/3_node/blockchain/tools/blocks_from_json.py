@@ -47,7 +47,7 @@ def get_str_block_by_id(blocks_json, id):
 
 
 def convert_block_from(block_json):
-    block = Block(block_json['timestamp'], block_json['prev_hash'], block_json['transactions'], int(block_json['id']), block_json['nonce'], block_json['hash'])
+    block = Block(block_json['timestamp'], block_json['prev_hash'], block_json['transactions'], int(block_json['id']), block_json['nonce'], block_json['hash'], block_json['merkle_root'])
     return block
 
 

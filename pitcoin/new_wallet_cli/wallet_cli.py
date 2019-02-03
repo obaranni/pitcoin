@@ -168,7 +168,7 @@ class WalletCli(cmd.Cmd):
         for i in status_codes:
             if status_codes[i] == code:
                 print("[from: node]:", i)
-        print(CEND)
+        print(CEND, end="")
 
     def do_send(self, line):
         try:

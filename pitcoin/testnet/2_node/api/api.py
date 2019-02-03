@@ -2,12 +2,14 @@ from flask import  Flask, request, jsonify
 import sys, os, json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain'))
 from blockchain import Blockchain
-
-
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 # Create the application instance
 app = Flask(__name__)
 app.config['DEBUG'] = False
-# Create a URL route in our application for "/"
+
+
 
 # node = None
 
@@ -25,6 +27,9 @@ CONFIG_FILE = os.path.join(os.path.dirname(__file__),  '..', 'config')
 
 
 class NonJSON(Exception):
+    pass
+
+class EmptyPool(Exception):
     pass
 
 
@@ -51,7 +56,8 @@ def set_consensus():
 @app.route('/newblock', methods=['GET'])
 def new_block():
     global node
-    print("[from: node]: someone mined a new block")
+    print("\n[from: node]: Someone mined a new block")
+    node.challenge = False
     if node.consensus_mode:
         node.connect_with_peers(get_chain=True)
     else:
@@ -85,17 +91,18 @@ def get_last_block():
         global node
         block, block_str = node.get_block_by_id(id=-1)
         if not block:
-            return jsonify({'block': 'None', 'error': 'Block doesn\'t exist'})
+            return jsonify({'block': 'None', 'error': 'Chain is empty'})
         return jsonify({'block': block_str})
 
 
-@app.route('/getblock', methods=['GET'])
+@app.route('/block', methods=['GET'])
 def get_block():
         global node
-        id = request.args.get('id')
-        if id is None or not id.isdigit() or int(id) < 0:
-            return jsonify({'block': 'None', 'error:':'block id should be a positive number, \"/getblock?id=28\"'})
-        block, block_str = node.get_block_by_id(id)
+        height = request.args.get('height')
+        if height is None or not height.isdigit() or int(height) < 1:
+            return jsonify({'block': 'None', 'error:':'block height should be a positive number above zero, '
+                                                      '\"/block?height=28\"'})
+        block, block_str = node.get_block_by_id(int(height) - 1)
         if not block:
             return jsonify({'block': 'None', 'error': 'Block doesn\'t exist'})
         return jsonify({'block': block_str})
@@ -103,19 +110,18 @@ def get_block():
 
 @app.route('/chain', methods=['GET'])
 def get_full_chain():
-    return jsonify('Please use /getblock?id=*iterator* to get all blocks')
+    return node.get_full_blockchain()
 
 
-@app.route('/transaction/pendings')
+@app.route('/transaction/pendings', methods=['GET', 'POST'])
 def get_pending_transactions():
     global node
     try:
         txs = node.get_pending_txs()
         if len(txs) < 3:
-            code = status_codes["Transaction pull i empty"]
-            raise Exception
-    except:
-        return jsonify("Transaction pull i empty"), status_codes["Transaction pull i empty"]
+            raise EmptyPool
+    except EmptyPool:
+        return jsonify("Transaction pull i empty")
     return txs
 
 
@@ -142,6 +148,7 @@ def print_bad_config():
           "\t\"consensus_mode\": \"off\",\n\t\"trusted_peer"
           "s\": [\n\t\t\"127.0.0.1:5010\",\n\t\t\"127.0.0.1:"
           "5011\",\n\t\t\"127.0.0.1:5012\"\n\t]\n}")
+
 
 def main():
     global node
