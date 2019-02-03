@@ -1,7 +1,7 @@
 {
     "host_ip": "127.0.0.1:5000",
     "mining_mode": "off",
-    "consensus_mode": "off",
+    "consensus_mode": "on",
     "trusted_peers": [
         "127.0.0.1:5050",
         "127.0.0.1:5060"

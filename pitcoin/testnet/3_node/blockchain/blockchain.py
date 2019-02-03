@@ -25,19 +25,19 @@ class Blockchain:
     def set_configs(self, mine, consensus, peers):
         try:
             print("[from: node]: Configuring a node from a configuration file...")
-            if consensus == "on":
-                self.change_consensus_mode()
             if mine == "on":
                 self.change_mine_mode()
+            if consensus == "on":
+                self.change_consensus_mode()
             file = open(PEERS_FILE, 'w+')
             one_line_peers = ''
             for peer in peers:
                 one_line_peers += peer + '\n'
             file.write("%s" % one_line_peers)
             file.close()
-            print("[from: node]: Done")
+            print("[from: node]: Configuring done. Current blockchain height:", self.get_chain_length(), end="\n\n")
         except:
-            print("[from: node]: Failed!")
+            print("[from: node]: Configuring failed!\n")
             return False
         return True
 
@@ -79,7 +79,7 @@ class Blockchain:
 
     def start_mining(self):
         if len(self.blocks) < 1:
-            self.load_chain()
+            self.create_chain()
         flag = 0
         while True:
             txs = self.cut_transactions()
@@ -94,14 +94,13 @@ class Blockchain:
         self.connect_with_peers(get_chain=False)
 
     def create_chain(self):
-        txs = self.cut_transactions()
-        if not txs:
-            txs = None
-            print("[from: node]: Not enough txs in pool. Generating genesis block with coinbase tx only")
+        print("[from: node]: Creating genesis block")
+        txs = None
         block = self.mining_hash(self.genesis_block(txs))
         self.save_block(block)
+        print("[from: node]: Done. Current blockchain height:", self.get_chain_length())
 
-    def load_last_block_from_db(self):
+    def load_last_block_from_db(self, as_str=0):
         self.create_db_if_not_exist()
         try:
             file = open(BLOCKCHAIN_DB, 'r')
@@ -173,7 +172,7 @@ class Blockchain:
                 print("[from: node]: Fetching chain from peer...")
                 self.fetch_best_chain(peers[best_index])
                 return True
-        print("[from: node]: Using own chain")
+        print("[from: node]: There is no better chain. Using own chain")
 
     def connect_with_peers(self, get_chain):
         self.create_peers_if_not_exist()
@@ -186,9 +185,9 @@ class Blockchain:
         file.close()
 
     def load_chain(self):
-        print("[from: node]: Node started successfully")
-        print("[from: node]: Consensus mode: off")
-        print("[from: node]: Mining mode: off")
+        print("\n[from: node]: Node started successfully")
+        # print("[from: node]: Consensus mode: off")
+        # print("[from: node]: Mining mode: off")
         blocks = self.load_last_block_from_db()
         print("[from: node]: Loading blocks from database...")
         if blocks is None:
@@ -197,19 +196,20 @@ class Blockchain:
             self.blocks = [blocks]
             print("[from: node]: Done")
             print("[from: node]: Chain height:", self.get_chain_length())
-        print("[from: node]: Transactions in pool:", TxPool().get_pool_size())
+        print("[from: node]: Transactions in pool:", TxPool().get_pool_size(), end="\n\n")
 
         if self.consensus_mode:
             self.connect_with_peers(get_chain=True)
-        if not self.mine_mode:
-            return False
-        else:
+        if self.mine_mode:
             self.create_chain()
 
     def change_consensus_mode(self):
         self.consensus_mode = not self.consensus_mode
         if self.consensus_mode:
+            print("[from: node]: Consensus mode: on")
             self.connect_with_peers(get_chain=True)
+        else:
+            print("[from: node]: Consensus mode: off")
 
     def resolve_conflicts(self):
         pass
@@ -283,6 +283,8 @@ class Blockchain:
 
     def get_block_by_id(self, id):
         self.create_db_if_not_exist()
+        if id == -1:
+            id = self.blocks[-1].block_id
         result_line = ''
         file = open(BLOCKCHAIN_DB, 'r')
         lines = file.readlines()
