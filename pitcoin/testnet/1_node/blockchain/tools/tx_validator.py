@@ -1,7 +1,7 @@
 import ecdsa
 import codecs
 import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'wallet'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'tools'))
 import wallet
 
 
