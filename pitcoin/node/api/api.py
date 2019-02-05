@@ -108,6 +108,15 @@ def get_block():
         return jsonify({'block': block_str})
 
 
+@app.route('/balance', methods=['GET'])
+def get_balance():
+        global node
+        address = request.args.get('address')
+        if address is None or len(address) < 26:
+            return jsonify({'balance': 'None', 'error:':'bad address'})
+        balance = node.get_balance(address)
+        return jsonify({'balance': balance})
+
 @app.route('/chain', methods=['GET'])
 def get_full_chain():
     return node.get_full_blockchain()

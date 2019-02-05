@@ -2,6 +2,7 @@ import sys, os, datetime, json, requests
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain', 'tools'))
 from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
+from tools.serializer import Deserializer
 from serialized_txs_to_json import txs_to_json
 from blocks_to_json import convert_blocks_to
 from blocks_from_json import convert_last_block_from, convert_by_id_block_from, get_str_block_by_id, convert_block_from
@@ -368,6 +369,28 @@ class Blockchain:
         block = convert_by_id_block_from(result_line, id)
         file.close()
         return block, block_json
+
+    def unpack_txs(self, block, address):
+        result = 0
+        for i in range(0, len(block.transactions)):
+            deser = Deserializer(block.transactions[i])
+            p1, p2, p3, p4, p5 = deser.deserialize()
+            print(p3, address)
+            if p3 == address:
+                print("123", result)
+                result += 1
+        return result
+
+
+
+    def get_balance(self, address):
+        last = self.blocks[-1].block_id
+        current = 0
+        for i in range(0, last):
+            block, trash = self.get_block_by_id(i)
+            current += self.unpack_txs(block, address)
+        return current
+
 
     def create_peers_if_not_exist(self):
         file = open(PEERS_FILE, 'a+')
