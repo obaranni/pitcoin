@@ -57,7 +57,7 @@ CRED = '\033[91m'
 CGREEN = '\033[92m'
 CEND = '\033[0m'
 
-# send {"inputs": [{"tx_id": "033407563b276eff738c00dc036020ce6f1d88210ef581f2316e5a3ee98ca51b", "tx_out_id": "1", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.0005"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.0002", "script_type": "p2pkh"}, {"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.0002", "script_type": "p2pkh"}]}
+# send {"inputs": [{"tx_id": "f904ba9b44ae2b68d5663289b52545fdab9c4a9d9a855fe05ab1e8a3cee56814", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00009"}, {"tx_id": "0bcedf6c019a14e7a187b08279f203098a42d336097e372129aad14432b4e768", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.0002"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"}]}
 
 status_codes = {
     "Transaction pull i empty": 101,
@@ -212,8 +212,10 @@ class WalletCli(cmd.Cmd):
             tx = Transaction(lines[0] + ']}', lines[1] + ']}')
             tx.get_presign_raw_format()
             tx.calculate_hash()
+            print(tx.raw_tx.hex())
             sender_pub_key = wallet_utils.getPublickKey(sender_private)
             sender_compressed_pub_key = wallet_utils.compressPublicKey(sender_pub_key)
+            # sender_compressed_pub_key = "02C3C6A89E01B4B62621233C8E0C2C26078A2449ABAA837E18F96A1F65D7B8CC8C"
             tx.sign_tx(sender_private)
             print(tx.get_signed_raw_format(sender_compressed_pub_key).hex())
 
@@ -298,24 +300,90 @@ if __name__ == '__main__':
 
 
 
+
+
+
+
+
+
+
+
 """
-01000000
-01
-1ba58ce93e5a6e31f281f50e21881d6fce206003dc008c73ff6e273b56073403
-01
-0000006
-b473044022071b9309a68e416d5179b2f9dfb8ee1464400eb00243a16c905797bc6ac1a6cc402204a6f81985e9fbb5f2de7733c5c82237902c9755a3c416ea55d19736045dd2066012102c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8c76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288acffffffff02204e00000000000000204e0000000000000000000000
+
+old:
+version :        01000000
+tx_in_counts:    01
+Prev_hash:          1ba58ce93e5a6e31f281f50e21881d6fce206003dc008c73ff6e273b56073403
+tx_out_index:       01000000
+script_len:         6a
+script:                 47
+                            30440220457d6125e0565a28add15b0cc19664fbdadd6161c368e3407cf6c2a4ab9e16f302207eb743c3f67f07a3657388704144930172f625c6fe4e410d32210853af22805801
+                        21
+                            02c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8c 
+seq:                ffffffff
+    
+    02204e0000000000001976a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac204e0000000000001976a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac00000000
+
+new:
+                01000000
+                02
+                    68e7b43244d1aa2921377e0936d3428a0903f27982b087a1e7149a016cdfce0b
+                    00000000
+                    6b
+                        48
+                            3045022100fc4c73adfdd65d4879ee477e8d800172d49f6be957c4ef45e25cf2520e38e62202203565827c645c934b5786a25e27bce1b8bae48a54f66489587c669ed9b74732e501
+                        21
+                            02c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8c
+                    ffffffff
+                    68e7b43244d1aa2921377e0936d3428a0903f27982b087a1e7149a016cdfce0b
+                    
+                    01000000
+                    6b
+                        48
+                            3045022100fc4c73adfdd65d4879ee477e8d800172d49f6be957c4ef45e25cf2520e38e62202203565827c645c934b5786a25e27bce1b8bae48a54f66489587c669ed9b74732e501
+                        21
+                            02c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8c
+                    ffffffff
+                    
+                    
+                04
+                    2823000000000000
+                    19
+                        76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac
+                    
+                    2823000000000000
+                    19
+                        76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac
+                        
+                    2823000000000000
+                    19
+                        76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac
+                        
+                    2823000000000000
+                    19
+                        76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac
+                    
+                    00000000
+                    
+                    
+                
+                
+46
+    304302206fe3ab3c66460619034c1f8008d5d7df132a98f76916e8ba35562bb7cb937c41021f2ee468f7857cd3c7681d02f60e270782cf3c832342e2f2ad266e8ddf7f4d1f01
+21
+    02c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8c     
+                    
+                    
+                    
+68e7b43244d1aa2921377e0936d3428a0903f27982b087a1e7149a016cdfce0b
+00000000
+6b
+    48
+        3045022100fc886a2462442e00920b5292fca4ec3b92bc070ef727207c4f8844c0aa025d2e0220539daf12033ed2d214b893c3e8139dfeaa627c32fca6eba076ec2d991e3e7c7101
+    21
+        02c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8c
+    ffffffff
 """
-
-
-
-
-
-
-
-
-
-
 
 
 

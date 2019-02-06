@@ -9,6 +9,7 @@ class Input:
         self.sequence = bytes.fromhex(sequence)
         self.script_type = script_type
         self.unlock_script = None
+        self.sign = None
 
     def get_presign_raw_format(self):
         return (
@@ -20,9 +21,9 @@ class Input:
         )
 
     def p2pkh_unlock_script(self, sign, compressed_pub):
+        self.sign = sign
         self.unlock_script = (
-                struct.pack("<B", len(sign) + 1)
-                + sign
+                sign
                 + b'\01'
                 + struct.pack("<B", len(bytes.fromhex(compressed_pub.decode('utf-8'))))
                 + bytes.fromhex(compressed_pub.decode('utf-8'))
@@ -35,12 +36,20 @@ class Input:
 
     def get_sign_raw_format(self, sign, compressed_pub_key):
         self.create_unlock_script(sign, compressed_pub_key)
+        print((
+                self.input_tx_id
+                + self.out_index
+                + struct.pack("<B", len(self.unlock_script) + 1)
+                + struct.pack("<B", len(self.sign) + 1)
+                + self.unlock_script
+                + self.sequence
+        ).hex())
         return (
             self.input_tx_id
             + self.out_index
             + struct.pack("<B", len(self.unlock_script) + 1)
+            + struct.pack("<B", len(self.sign) + 1)
             + self.unlock_script
-            + self.out_script
             + self.sequence
         )
 

@@ -7,8 +7,8 @@ from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
 
 CURVE_ORDER = SECP256k1.order
-input_amount = int(0.0007 * 10 ** 8)
-output_amount = int(0.0001 * 10 ** 8)
+input_amount = int(0.0005 * 10 ** 8)
+output_amount = int(0.0002 * 10 ** 8)
 fee = int(0.0001 * 10 ** 8)
 sender_address = "mv3d5P4kniPrT5owreux438yEtcFUefo71"
 sender_pub = "04C3C6A89E01B4B62621233C8E0C2C26078A2449ABAA837E18F96A1F65D7B8CC8CC5F96F69C917C286BB324A7B400A69ED6FC3CDA20BC292DC9B2414ADD80029D2"
@@ -17,8 +17,8 @@ sender_pub_bytes = bytes.fromhex(sender_pub)
 sender_compressed_pub_bytes = bytes.fromhex(sender_compressed_pub)
 sender_priv = "884a1c97e9feb617ece801bb13ad7251854f9f0821f2f61237accbe085be58af"
 sender_wif_priv = "5JrJuxQ5QhLASMpQgSCZ9Fmzt8Sit8X3h1N9LGWYdXDtBhUxCwB"
-recipient_address = "n3Jqa2cyGqKDvc8QNMKYooy5yYUqoGwrvi"
-prev_txid = "b7067af51e1886e377d595676d73b778ee5088445522c6008c620f4ae8cd27f8"
+recipient_address = "mv3d5P4kniPrT5owreux438yEtcFUefo71"
+prev_txid = "033407563b276eff738c00dc036020ce6f1d88210ef581f2316e5a3ee98ca51b"
 
 
 def ripemd160(x):
@@ -104,6 +104,8 @@ def make_raw_transaction():
             + rtx.lock_time
             + struct.pack("<L", 1)
     )
+
+    print(raw_tx_string.hex())
 
     hashed_tx_to_sign = hashlib.sha256(hashlib.sha256(raw_tx_string).digest()).digest()
 
