@@ -69,7 +69,7 @@ CEND = '\033[0m'
 
 # send {"inputs": [{"tx_id": "18776aab24657972ae8fcbb3b2b26a48cd50b55ad47a36af1e60881cf0cac5d8", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1519"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1518", "script_type": "p2pkh"}]}
 
-# send {"inputs": [ {"tx_id": "18776aab24657972ae8ftbb3b2b26a48cd50b55ad47a36af1e60881cf0cac5d8", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1519"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1518", "script_type": "p2pkh"}]}
+# send {"inputs": [ {"tx_id": "226c435ab0b3bb1d84d2bb001dc71a980687329deb5216836ba465d37cc6279d", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1517"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1516", "script_type": "p2pkh"}]}
 
 
 status_codes = {
@@ -216,6 +216,7 @@ class WalletCli(cmd.Cmd):
                 code = 201
             else:
                 url = pitcoin_node_ip + '/transaction/new'
+                print(url)
                 post_data = {'serialized_tx': str(TRANSACTIONS[-1])}
                 resp = requests.post(url=url, json=post_data)
                 code = resp.status_code
@@ -236,68 +237,21 @@ class WalletCli(cmd.Cmd):
             lines = str(line).split(']}')              # TODO: better split
             if len(lines) != 3 or len(lines[2]) > 1 :
                 raise WrongLineArgs
-
             tx = Transaction(lines[0] + ']}', lines[1] + ']}')
-            # if tx.version is None:
-            #     raise BadTransactionFormat
             tx.get_presign_raw_format()
             tx.calculate_hash()
             sender_pub_key = wallet_utils.getPublickKey(sender_private)
             sender_compressed_pub_key = wallet_utils.compressPublicKey(sender_pub_key)
             tx.sign_tx(sender_private)
             ser_tx = tx.get_signed_raw_format(sender_compressed_pub_key).hex()
-
-            # tx.calculate_hash()
-            # signature, verify_key = wallet_utils.signMessage(sender_private, tx.get_hash())
-            # tx.set_sign(signature, verify_key)
-            # if not tx_v.validate_recipient_address(tx.get_unformat_recipient_address()):
-            #     raise WrongRecipientAddress
-            # if not tx_v.verify_sender_address(tx.get_unformat_sender_address(), sender_private):
-            #     raise WrongSenderAddress
-            # if not tx_v.validate_signature(tx, (wallet_utils.getPublickKey(sender_private)).decode('utf-8')[2:]):
-            #     raise WrongTransactionSignature
-
-            # ser_tx = Serializer(tx).get_serialized_tx()
             TRANSACTIONS.append(ser_tx)
             print(ser_tx)
-            # print("Your raw transaction:\n", ser_tx, sep="")
-        # except WrongRawTransaction:
-        #     print("Raw transaction has wrong format")
-        # except WrongTransactionSignature:
-        #     print("Wrong transaction signature")
-        #     self.help_send()
-        #     return False
-        # except WrongRecipientAddress:
-        #     print("Wrong recipient address")
-        #     self.help_send()
-        #     return False
-        # except WrongSenderAddress:
-        #     print("Wrong sender address")
-        #     self.help_send()
-        #     return False
-        # except AmountError:
-        #     print("The amount should be from 0.1 to 6553.5")
-        #     self.help_send()
-        #     return False
-        # except ValueError:
-        #     print("Wrong amount")
-        #     self.help_send()
-        #     return False
-        # except WrongPublicKey:                       # 84.999800
-        #     print("Wrong public key")
-        #     self.help_send()
-        #     return False
-        # except WrongLineArgs:
-        #     print("should be 2 arguments")
-        #     self.help_send()
-        #     return False
         except BadTransactionFormat:
             print("Cannot create transaction")
             return False
         except IndexError:
             print("Generate or import private key first")
             return False
-
 
     def do_endpoint(self, line):
         if len(line) < 1:
@@ -319,6 +273,14 @@ class WalletCli(cmd.Cmd):
             self.help_endpoin()
         except requests.exceptions.ConnectionError:
             print(CRED, "[from: cli]: cannot connect", CEND, sep="")
+
+    def do_deserialize(self, line):
+        if len(line) < 50:
+            print("Too short tx")
+            return False
+        tx = Transaction(False, False)
+        tx.set_signed_raw_tx(line)
+        tx.deserialize_raw_tx()
 
 def print_keys_info(private_key):
     print("Private key: \"", private_key, "\"", sep="")

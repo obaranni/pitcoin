@@ -50,8 +50,9 @@ class Transaction:
             self.numb_outputs = struct.pack("<B", 0)
             self.inputs = []
             self.outputs = []
-            self.create_inputs(inputs)
-            self.create_outputs(outputs)
+            if inputs and outputs:
+                self.create_inputs(inputs)
+                self.create_outputs(outputs)
             self.locktime = struct.pack("<L", locktime)
             self.raw_tx = []
             self.real_raw_tx = None
@@ -189,6 +190,71 @@ class Transaction:
         for i in range(0, len(self.inputs)):
             self.signs.append(sk.sign_digest(self.tx_hashes[i], sigencode=ecdsa.util.sigencode_der_canonize))
         return self.signs
+
+    def set_signed_raw_tx(self, raw_tx):
+        self.real_raw_tx = raw_tx
+
+    def deserialize_raw_tx(self):
+        start_point = 0
+        end_point = 8
+        version = struct.unpack("<L", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0]
+        start_point = end_point
+        end_point += 2
+        numb_inputs = struct.unpack("<B", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0]
+
+        print("\nversion", version)
+        print("numb_inputs", numb_inputs)
+
+        for i in range(0, numb_inputs):
+            start_point = end_point
+            end_point += 64
+            prev_tx_id = flip_byte_order(self.real_raw_tx[start_point:end_point])
+            start_point = end_point
+            end_point += 8
+            out_index = struct.unpack("<L", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0]
+            start_point = end_point
+            end_point += 2
+            script_len = struct.unpack("<B", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0] * 2
+            start_point = end_point
+            end_point += script_len
+            script = self.real_raw_tx[start_point:end_point]
+            start_point = end_point
+            end_point += 8
+            sequence = self.real_raw_tx[start_point:end_point]
+            print("\nprev_tx_id", prev_tx_id)
+            print("out_index", out_index)
+            print("script_len", script_len, "in bytes", int(script_len / 2))
+            print("script", script)
+            print("sequence", sequence)
+
+        start_point = end_point
+        end_point += 2
+        numb_outputs = struct.unpack("<B", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0]
+
+        print("\nnumb_outputs", numb_outputs)
+
+
+        for i in range(0, numb_outputs):
+            start_point = end_point
+            end_point += 16
+            amount = struct.unpack("<Q", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0] / 100000000
+            start_point = end_point
+            end_point += 2
+            script_len = struct.unpack("<B", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0] * 2
+            start_point = end_point
+            end_point += script_len
+            script = self.real_raw_tx[start_point:end_point]
+
+            print("\namount", amount)
+            print("script_len", script_len, "in bytes", int(script_len / 2))
+            print("script", script)
+
+
+
+        start_point = end_point
+        end_point += 8
+        locktime = struct.unpack("<L", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0]
+        print("\nlocktime", locktime, end="\n\n")
 
 
 class CoinbaseTransaction(Transaction): # TODO: as above tx
