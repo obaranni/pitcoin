@@ -59,6 +59,9 @@ CEND = '\033[0m'
 
 # send {"inputs": [{"tx_id": "f904ba9b44ae2b68d5663289b52545fdab9c4a9d9a855fe05ab1e8a3cee56814", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00009"}, {"tx_id": "0bcedf6c019a14e7a187b08279f203098a42d336097e372129aad14432b4e768", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.0002"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"}]}
 
+# send {"inputs": [{"tx_id": "0bcedf6c019a14e7a187b08279f203098a42d336097e372129aad14432b4e768", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.0002"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00015", "script_type": "p2pkh"}]}
+
+
 status_codes = {
     "Transaction pull i empty": 101,
     "Node added": 102,
@@ -162,25 +165,14 @@ class WalletCli(cmd.Cmd):
         wallet_utils.saveKeyToFile(public_key)
         print_keys_info(decoded_key)
 
+
     def do_getmyutxos(self, line):
-        print("{",
-      "\"txid\": \"c14aba0d339c7fc8d8f89a62dc7950826f2213649e71b3d79cfe105c78f7474b\",",
-      "\"vout\": 1,",
-      "\"scriptSig\": {",
-        "\"asm\": \"0014e833cb5354dd30bdb4d0ecca6f9d986a38df629c\",",
-        "\"hex\": \"160014e833cb5354dd30bdb4d0ecca6f9d986a38df629c\"",
-      "},",
-      "\"sequence\": 4294967294",
-    "},",
-    "{",
-    "  \"txid\": \"34c34f48580337c6fa76a5545546a0980f57b1de516a20fcaba6b404ce4e7c96\",",
-      "\"vout\": 0,",
-      "\"scriptSig\": {",
-        "\"asm\": \"00147f6e0f0300dbd7f57110f891e9859546afafcf88\",",
-        "\"hex\": \"1600147f6e0f0300dbd7f57110f891e9859546afafcf88\"",
-      "},",
-      "\"sequence\": 4294967294",
-    "}", sep="\n")
+        my_address = "mv3d5P4kniPrT5owreux438yEtcFUefo71"
+        endpoint = "https://testnet.blockchain.info/balance"
+        params = (('active', my_address),)
+        resp = requests.get(url=endpoint, params=params)
+        print(resp.json())
+
 
     def do_broadcast(self, line):
         global node_ip
@@ -212,10 +204,8 @@ class WalletCli(cmd.Cmd):
             tx = Transaction(lines[0] + ']}', lines[1] + ']}')
             tx.get_presign_raw_format()
             tx.calculate_hash()
-            print(tx.raw_tx.hex())
             sender_pub_key = wallet_utils.getPublickKey(sender_private)
             sender_compressed_pub_key = wallet_utils.compressPublicKey(sender_pub_key)
-            # sender_compressed_pub_key = "02C3C6A89E01B4B62621233C8E0C2C26078A2449ABAA837E18F96A1F65D7B8CC8C"
             tx.sign_tx(sender_private)
             print(tx.get_signed_raw_format(sender_compressed_pub_key).hex())
 

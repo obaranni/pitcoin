@@ -30,10 +30,10 @@ class Transaction:
             self.create_inputs(inputs)
             self.create_outputs(outputs)
             self.locktime = struct.pack("<L", locktime)
-            self.raw_tx = None
+            self.raw_tx = []
             self.real_raw_tx = None
-            self.tx_hash = None
-            self.sign = None
+            self.tx_hashes = []
+            self.signs = []
         # except:
         #     print("Bad inputs or outputs")
 
@@ -68,16 +68,19 @@ class Transaction:
         # except:
         #     print("Bad input")
 
-    def get_presign_raw_inputs(self):
+    def get_presign_raw_inputs(self, input_id):
         raw_inputs = b''
-        for i in self.inputs:
-            raw_inputs += i.get_presign_raw_format()
+        for i in range(0, len(self.inputs)):
+            if i == input_id:
+                raw_inputs += self.inputs[i].get_presign_raw_format()
+            else:
+                raw_inputs += self.inputs[i].get_presign_zero_script_raw_format()
         return raw_inputs
 
     def get_sign_raw_inputs(self, compressed_pub_key):
         raw_inputs = b''
-        for i in self.inputs:
-            raw_inputs += i.get_sign_raw_format(self.sign, compressed_pub_key)
+        for i in range(0, len(self.inputs)):
+            raw_inputs += self.inputs[i].get_sign_raw_format(self.signs[i], compressed_pub_key)
         return raw_inputs
 
     def get_raw_outputs(self):
@@ -87,15 +90,16 @@ class Transaction:
         return raw_outputs
 
     def get_presign_raw_format(self):
-        self.raw_tx = (
+        for i in range(0, len(self.inputs)):
+            self.raw_tx.append(
                 self.version
                 + self.numb_inputs
-                + self.get_presign_raw_inputs()
+                + self.get_presign_raw_inputs(i)
                 + self.numb_outputs
                 + self.get_raw_outputs()
                 + self.locktime
                 + struct.pack("<L", 1)
-        )
+            )
         return self.raw_tx
 
     def get_signed_raw_format(self, compressed_pub_key):
@@ -110,14 +114,16 @@ class Transaction:
         return self.real_raw_tx
 
     def calculate_hash(self):
-        self.tx_hash = hashlib.sha256(hashlib.sha256(self.raw_tx).digest()).digest()
-        return self.tx_hash
+        for i in range(0, len(self.inputs)):
+            self.tx_hashes.append(hashlib.sha256(hashlib.sha256(self.raw_tx[i]).digest()).digest())
+        return self.tx_hashes
 
     def sign_tx(self, priv_key):
         priv_key_bytes = bytes.fromhex(priv_key)
         sk = ecdsa.SigningKey.from_string(priv_key_bytes, curve=ecdsa.SECP256k1)
-        self.sign = sk.sign_digest(self.tx_hash, sigencode=ecdsa.util.sigencode_der_canonize)
-        return self.sign
+        for i in range(0, len(self.inputs)):
+            self.signs.append(sk.sign_digest(self.tx_hashes[i], sigencode=ecdsa.util.sigencode_der_canonize))
+        return self.signs
 
 
 class CoinbaseTransaction(Transaction): # TODO: as above tx
