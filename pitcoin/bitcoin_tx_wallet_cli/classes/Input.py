@@ -46,16 +46,7 @@ class Input:
             self.p2pkh_unlock_script(sign, compressed_pub)
 
     def get_sign_raw_format(self, sign, compressed_pub_key):
-        print(sign)
         self.create_unlock_script(sign, compressed_pub_key)
-        print((
-                self.input_tx_id
-                + self.out_index
-                + struct.pack("<B", len(self.unlock_script) + 1)
-                + struct.pack("<B", len(self.sign) + 1)
-                + self.unlock_script
-                + self.sequence
-        ).hex())
         return (
             self.input_tx_id
             + self.out_index

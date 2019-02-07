@@ -1,9 +1,11 @@
-import hashlib, base58, ecdsa, json, struct
+import hashlib, base58, ecdsa, json, struct, sys, os
 from enum import Enum
 from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
 from .Input import Input
 from .Output import Output
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'tools'))
+import tx_validator
 
 CURVE_ORDER = SECP256k1.order
 
@@ -11,17 +13,38 @@ DECIMALS = 8
 MAX_AMOUNT = 21000000
 ADDRESS_LEN = 35
 
-
-
-class AmountError(Exception):
+class BadOutIndex(Exception):
     pass
 
+class BadHash(Exception):
+    pass
+
+class BadAddress(Exception):
+    pass
+
+class BadInputFormat(Exception):
+    pass
+
+class BadAmount(Exception):
+    pass
+
+class BadTransactionFormat(Exception):
+    pass
+
+class BadOutputFormat(Exception):
+    pass
+
+class BadOutputData(Exception):
+    pass
+
+class BadInputData(Exception):
+    pass
 
 # TODO:                check input_values - output_values >= 0
 
 class Transaction:
     def __init__(self, inputs, outputs, version=1, locktime=0):
-        # try:
+        try:
             self.version = struct.pack("<L", version)
             self.numb_inputs = struct.pack("<B", 0)
             self.numb_outputs = struct.pack("<B", 0)
@@ -34,39 +57,81 @@ class Transaction:
             self.real_raw_tx = None
             self.tx_hashes = []
             self.signs = []
-        # except:
-        #     print("Bad inputs or outputs")
+        except BadInputFormat:
+            print("Cannot create input")
+            raise BadTransactionFormat
+        except BadOutputFormat:
+            print("Cannot create output")
+            raise BadTransactionFormat
 
     def validate_input(self, input):
-        return True
+        try:
+            int(input['tx_id'], 16)
+            if len(input['tx_id']) != 64:
+                raise BadHash
+            if int(input['tx_out_id']) < 0 or int(input['tx_out_id']) > 200:
+                raise BadOutIndex
+            # TODO: validate script
+            amount = float(input['value'])
+            if float(amount) > MAX_AMOUNT or len(str(amount).split('.')[1]) > DECIMALS:
+                raise BadAmount
+            return True
+        except BadAmount:
+            print("Bad amount!")
+        except BadOutIndex:
+            print("Bad tx_out_id!")
+        except ValueError:
+            print("Bad tx_id symbols!")
+        except BadHash:
+            print("Bad tx_id len!")
+        except:
+            print("Bad json format!")
+        raise BadInputData
 
     def create_inputs(self, inputs):
-        # try:
+        try:
             inputs_dict = json.loads(inputs)['inputs']
             inputs_arr = [i for i in inputs_dict]
             for i in inputs_arr:
                 self.validate_input(i)
                 self.inputs.append(Input(i['tx_id'], i['tx_out_id'], i['tx_script']))
             self.numb_inputs = struct.pack("<B", len(self.inputs))
-        # except:
-        #     print("Bad input")
+        except BadInputData:
+            print("Bad inputs data")
+            raise BadInputFormat
+        except:
+            print("Bad inputs json format")
+            raise BadInputFormat
 
-    def validate_output(self, input):
-        amount = input['value']
-        if float(amount) > MAX_AMOUNT or len(str(amount).split('.')[1]) > DECIMALS:
-            raise AmountError
-        input['value'] = int(float(amount) * int(pow(10, DECIMALS)))
+    def validate_output(self, output):
+        try:
+            amount = output['value']
+            if float(amount) > MAX_AMOUNT or len(str(amount).split('.')[1]) > DECIMALS:
+                raise BadAmount
+            output['value'] = int(float(amount) * int(pow(10, DECIMALS)))
+            if not tx_validator.validate_address(output['address']):
+                raise BadAddress
+            return True
+        except BadAddress:
+            print("Bad address!")
+        except BadAmount:
+            print("Bad amount!")
+        raise BadOutputData
 
     def create_outputs(self, outputs):
-        # try:
+        try:
             outputs_dict = json.loads(outputs)['outputs']
             outputs_arr = [i for i in outputs_dict]
             for i in outputs_arr:
                 self.validate_output(i)
                 self.outputs.append(Output(i['address'], i['value'], i['script_type']))
             self.numb_outputs = struct.pack("<B", len(self.outputs))
-        # except:
-        #     print("Bad input")
+        except BadOutputData:
+            print("Bad outputs data")
+            raise BadOutputFormat
+        except:
+            print("Bad outputs json format")
+            raise BadOutputFormat
 
     def get_presign_raw_inputs(self, input_id):
         raw_inputs = b''
