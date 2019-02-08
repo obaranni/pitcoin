@@ -2,8 +2,8 @@ import hashlib, base58, ecdsa, json, struct, sys, os
 from enum import Enum
 from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
-from .Input import Input
-from .Output import Output
+from Input import Input
+from Output import Output
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'tools'))
 import tx_validator
 

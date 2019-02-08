@@ -1,7 +1,7 @@
 from merkle import calculate_merkle_root as calc_merkle_root
 import hashlib
 from binascii import unhexlify
-from transaction import CoinbaseTransaction
+from Transaction import CoinbaseTransaction
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'tools'))
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage

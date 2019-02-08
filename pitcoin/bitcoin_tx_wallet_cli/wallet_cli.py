@@ -69,7 +69,7 @@ CEND = '\033[0m'
 
 # send {"inputs": [{"tx_id": "18776aab24657972ae8fcbb3b2b26a48cd50b55ad47a36af1e60881cf0cac5d8", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1519"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1518", "script_type": "p2pkh"}]}
 
-# send {"inputs": [ {"tx_id": "226c435ab0b3bb1d84d2bb001dc71a980687329deb5216836ba465d37cc6279d", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1517"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1516", "script_type": "p2pkh"}]}
+# send {"inputs": [ {"tx_id": "5aeb5f44773fc93aff740645c64830e4cf61f84e7ee4ee84e1ddc0ac76af0895", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1516"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1515", "script_type": "p2pkh"}]}
 
 
 status_codes = {
@@ -217,6 +217,13 @@ class WalletCli(cmd.Cmd):
             else:
                 url = pitcoin_node_ip + '/transaction/new'
                 print(url)
+                TRANSACTIONS.append("01000000019508af76acc0de184eee47e4ef861cfe43048c6450674ff3ac93f77"
+                                    "445feb5a000000006a47304402200cca59993d4996e42a6dcba5faa92dd7617a98"
+                                    "1da6f07819d2428ed8562b4c80022060032c5c8097c782e31533b3ccdfab87befb"
+                                    "6455d694375ee0ca00482fe9d281012102c3c6a89e01b4b62621233c8e0c2c2607"
+                                    "8a2449abaa837e18f96a1f65d7b8cc8cffffffff01b02be700000000001976a914"
+                                    "9f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac0000000"
+                                    "0")#TODO: DLELELELELELELEMEMEMMEMEMEMEM
                 post_data = {'serialized_tx': str(TRANSACTIONS[-1])}
                 resp = requests.post(url=url, json=post_data)
                 code = resp.status_code
@@ -226,6 +233,8 @@ class WalletCli(cmd.Cmd):
             return False
         if code < 300:
             print(CGREEN, end="")
+        else:
+            print(CRED, end="")
         for i in status_codes:
             if status_codes[i] == code:
                 print("[from: node]:", i)
@@ -245,7 +254,10 @@ class WalletCli(cmd.Cmd):
             tx.sign_tx(sender_private)
             ser_tx = tx.get_signed_raw_format(sender_compressed_pub_key).hex()
             TRANSACTIONS.append(ser_tx)
-            print(ser_tx)
+            print("Your serialized transaction:", ser_tx)
+        except WrongLineArgs:
+            self.help_send()
+            return False
         except BadTransactionFormat:
             print("Cannot create transaction")
             return False
@@ -275,12 +287,16 @@ class WalletCli(cmd.Cmd):
             print(CRED, "[from: cli]: cannot connect", CEND, sep="")
 
     def do_deserialize(self, line):
-        if len(line) < 50:
-            print("Too short tx")
+        try:
+            if len(line) < 50:
+                print("Too short tx")
+                return False
+            tx = Transaction(False, False)
+            tx.set_signed_raw_tx(line)
+            print(tx.deserialize_raw_tx())
+        except BadTransactionFormat:
+            print("Cannot deserialize transation")
             return False
-        tx = Transaction(False, False)
-        tx.set_signed_raw_tx(line)
-        tx.deserialize_raw_tx()
 
 def print_keys_info(private_key):
     print("Private key: \"", private_key, "\"", sep="")

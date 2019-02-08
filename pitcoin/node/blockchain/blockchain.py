@@ -8,7 +8,7 @@ from blocks_to_json import convert_blocks_to
 from blocks_from_json import convert_last_block_from, convert_by_id_block_from, get_str_block_by_id, convert_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
-from transaction import CoinbaseTransaction
+from Transaction import CoinbaseTransaction
 TRANSACTIONS_TO_MINE = 4
 BASE_COMPLEXITY = 4
 MAX_TX_TO_GET = 1000
