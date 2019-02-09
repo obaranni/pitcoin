@@ -2,6 +2,7 @@ import struct
 
 class Input:
     def __init__(self, input_tx_id, out_index, out_script, sequence="ffffffff", script_type="p2pkh"):
+        print(out_script)
         self.input_tx_id = bytes.fromhex(flip_byte_order(input_tx_id))
         self.out_index = struct.pack("<L", int(out_index))
         self.out_script = bytes.fromhex(out_script)

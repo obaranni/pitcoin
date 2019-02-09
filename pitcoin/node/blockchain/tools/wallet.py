@@ -4,11 +4,12 @@ import binascii
 import secrets
 import codecs
 import ecdsa
-from binascii import hexlify
+
+from binascii import hexlify, unhexlify
 DECIMALS = 1         # create header ???
 MAX_AMOUNT = 6553.5  # 6553.5 from max short 65535 / 10
 
-STORAGE_FILE = "node/blockchain/storage/address.txt"
+STORAGE_FILE = "storage/address.txt"
 
 def privateKeyToWIF(privKey): #TODO: check is valid, testnet or mainnet
     pref_key = "80" + privKey
@@ -62,7 +63,7 @@ def compressPublicKey(pubKey):
     return comp_key
 
 
-def getAddresOfPublicKey(pubKey, testnet=0):
+def getAddresOfPublicKey(pubKey, testnet=1):
     sha = hashlib.new('sha256', codecs.decode(pubKey, 'hex')).digest()
     ripemd = hashlib.new('ripemd160', sha).digest()
     if testnet:
@@ -73,10 +74,10 @@ def getAddresOfPublicKey(pubKey, testnet=0):
     return base58.b58encode(codecs.decode(codecs.encode(encr_pub + checksum[:4], 'hex'), 'hex')).decode('utf-8')
 
 
-def fullSettlementPublicAddress(privKey):
+def fullSettlementPublicAddress(privKey, testnet=1):
     pub_key = getPublickKey(privKey)
     compressed_pub_key = compressPublicKey(pub_key)
-    pub_address = getAddresOfPublicKey(compressed_pub_key)
+    pub_address = getAddresOfPublicKey(compressed_pub_key, testnet)
     return pub_address
 
 
@@ -114,11 +115,11 @@ def readKeyFromFile(filePath):
     return key
 
 
-def newKeyPair():
+def newKeyPair(testnet=1):
     privKey = createPrivateKey()
     pubKey = getPublickKey(privKey)
     compPubKey = compressPublicKey(pubKey)
-    address = getAddresOfPublicKey(compPubKey)
+    address = getAddresOfPublicKey(compPubKey, testnet)
     return privKey, pubKey, address
 
 

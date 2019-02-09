@@ -11,6 +11,7 @@ CURVE_ORDER = SECP256k1.order
 
 DECIMALS = 8
 MAX_AMOUNT = 21000000
+MAX_AMOUNT_SATOSHIES = 210000000000
 ADDRESS_LEN = 35
 
 class BadOutIndex(Exception):
@@ -70,11 +71,11 @@ class Transaction:
             int(input['tx_id'], 16)
             if len(input['tx_id']) != 64:
                 raise BadHash
-            if int(input['tx_out_id']) < 0 or int(input['tx_out_id']) > 200:
+            if int(input['tx_out_id']) < 0 or int(input['tx_out_id']) > 4294967295:
                 raise BadOutIndex
             # TODO: validate script
             amount = float(input['value'])
-            if float(amount) > MAX_AMOUNT or len(str(amount).split('.')[1]) > DECIMALS:
+            if float(amount) > MAX_AMOUNT or (str(amount).find('.') != -1 and len(str(amount).split('.')[1]) > DECIMALS):
                 raise BadAmount
             return True
         except BadAmount:
@@ -107,7 +108,7 @@ class Transaction:
     def validate_output(self, output):
         try:
             amount = output['value']
-            if float(amount) > MAX_AMOUNT or len(str(amount).split('.')[1]) > DECIMALS:
+            if float(amount) > MAX_AMOUNT or (str(amount).find('.') != -1 and len(str(amount).split('.')[1]) > DECIMALS):
                 raise BadAmount
             output['value'] = int(float(amount) * int(pow(10, DECIMALS)))
             if not tx_validator.validate_address(output['address']):
@@ -168,11 +169,15 @@ class Transaction:
             )
         return self.raw_tx
 
-    def get_signed_raw_format(self, compressed_pub_key):
+    def get_signed_raw_format(self, compressed_pub_key, is_coinbase=0):
+        if is_coinbase:
+            inputs = self.get_presign_raw_inputs(0)
+        else:
+            inputs = self.get_sign_raw_inputs(compressed_pub_key)
         self.real_raw_tx = (
                 self.version
                 + self.numb_inputs
-                + self.get_sign_raw_inputs(compressed_pub_key)
+                + inputs
                 + self.numb_outputs
                 + self.get_raw_outputs()
                 + self.locktime
@@ -214,7 +219,7 @@ class Transaction:
                 start_point, end_point = self.move_pointers(end_point, 8)
                 out_index = struct.unpack("<L", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0]
                 sing_input['out_index'] = out_index
-                if int(out_index) < 0 or int(out_index) > 200:
+                if int(out_index) < 0 or int(out_index) > 4294967295:
                     raise BadOutIndex
                 start_point, end_point = self.move_pointers(end_point, 2)
                 script_len = struct.unpack("<B", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0] * 2
@@ -240,7 +245,7 @@ class Transaction:
                 sing_output = {}
                 start_point, end_point = self.move_pointers(end_point, 16)
                 amount = format(struct.unpack("<Q", bytes.fromhex(self.real_raw_tx[start_point:end_point]))[0] / 100000000,'.8f')
-                if float(amount) > MAX_AMOUNT or len(amount.split('.')[1]) > DECIMALS:
+                if float(amount) > MAX_AMOUNT_SATOSHIES or len(amount.split('.')[1]) > DECIMALS:
                     raise BadAmount
                 sing_output['value'] = amount
                 start_point, end_point = self.move_pointers(end_point, 2)

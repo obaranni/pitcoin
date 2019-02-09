@@ -30,21 +30,9 @@ class TxPool:
         file.close()
 
     def new_transaction(self, ser_tx):
-        # data = Deserializer(ser_tx).deserialize()
-        # tx = Transaction(data[1], data[2], data[0])
-        # tx.calculate_hash()
-        # tx.set_sign(unhexlify(data[4]), data[3])
-        # if not tx_val.validate_signature(tx, data[3]):
-        #     return False
-        # if not tx_val.validate_recipient_address(tx.get_unformat_recipient_address()):
-        #     return False
-        # if not tx_val.validate_recipient_address(tx.get_unformat_sender_address()):
-        #     return False
-        # self.save_to_mempool(ser_tx)
         try:
             tx = Transaction(False, False)
             tx.set_signed_raw_tx(ser_tx)
-            print(tx.deserialize_raw_tx())
             self.save_to_mempool(ser_tx)
         except:
             print("[from: node]: transaction was not added")

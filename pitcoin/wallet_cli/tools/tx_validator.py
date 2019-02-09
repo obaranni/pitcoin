@@ -1,11 +1,11 @@
 import ecdsa
 import codecs
-from wallet_utils import wallet_utils
+import wallet_utils
 
 
-def validate_recipient_address(address):
+def validate_address(address):
     if len(address) > 35 or len(address) < 26 or \
-            not (address[0] == "1" or address[0] == "3" or address[:3] == "bc1"):
+            not (address[0] == "m" or address[0] == "n"):
         return False
     return True
 

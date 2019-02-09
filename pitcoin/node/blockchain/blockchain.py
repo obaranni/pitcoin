@@ -1,21 +1,20 @@
-import sys, os, datetime, json, requests
+import sys, os, datetime, json, requests, base58
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain', 'tools'))
 from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
-from tools.serializer import Deserializer
 from serialized_txs_to_json import txs_to_json
 from blocks_to_json import convert_blocks_to
 from blocks_from_json import convert_last_block_from, convert_by_id_block_from, get_str_block_by_id, convert_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
-from Transaction import CoinbaseTransaction
+from Transaction import CoinbaseTransaction, Transaction
 TRANSACTIONS_TO_MINE = 4
 BASE_COMPLEXITY = 4
 MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
 TMP_BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'tmp_blocks')
 PEERS_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'peers')
-
+UTXO_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'utxo')
 
 class Blockchain:
 
@@ -101,11 +100,30 @@ class Blockchain:
         self.connect_with_peers(get_chain=False)
         self.challenge = True
 
+    def create_utxo_if_not_exist(self):
+        file = open(UTXO_FILE, 'a+')
+        file.close()
+
+    def calculate_utxo(self, block):
+        self.create_utxo_if_not_exist()
+        utxo_file = open(UTXO_FILE, "w+")
+        result_outputs_dict = ""
+        for i in block.transactions:
+            tx = Transaction(False, False)
+            tx.set_signed_raw_tx(i)
+            tx_outputs_dict = json.loads(tx.deserialize_raw_tx())['outputs']
+            for j in tx_outputs_dict:
+                j['address'] = base58.b58encode_check(bytes.fromhex('6f' + j['script'][6:46])).decode('utf-8')
+                result_outputs_dict = str(j) + "\n"
+        utxo_file.write("%s" % result_outputs_dict)
+
+
     def create_chain(self):
         print("[from: node]: Creating genesis block")
         txs = None
         block = self.mining_hash(self.genesis_block(txs))
         self.save_block(block, BLOCKCHAIN_DB)
+        self.calculate_utxo(self.blocks[-1])
         print("[from: node]: Done. Current blockchain height:", self.get_chain_length())
 
     def load_last_block_from_db(self, db_file, as_str=0):
@@ -369,28 +387,6 @@ class Blockchain:
         block = convert_by_id_block_from(result_line, id)
         file.close()
         return block, block_json
-
-    def unpack_txs(self, block, address):
-        result = 0
-        for i in range(0, len(block.transactions)):
-            deser = Deserializer(block.transactions[i])
-            p1, p2, p3, p4, p5 = deser.deserialize()
-            print(p3, address)
-            if p3 == address:
-                print("123", result)
-                result += 1
-        return result
-
-
-
-    def get_balance(self, address):
-        last = self.blocks[-1].block_id
-        current = 0
-        for i in range(0, last):
-            block, trash = self.get_block_by_id(i)
-            current += self.unpack_txs(block, address)
-        return current
-
 
     def create_peers_if_not_exist(self):
         file = open(PEERS_FILE, 'a+')

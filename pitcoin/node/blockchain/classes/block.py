@@ -2,9 +2,10 @@ from merkle import calculate_merkle_root as calc_merkle_root
 import hashlib
 from binascii import unhexlify
 from Transaction import CoinbaseTransaction
-import sys, os
+import sys, os, base58
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'tools'))
-from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
+from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage, getPublickKey, compressPublicKey
+
 from serializer import Serializer
 MINER_PRIV_WIF_FILE = os.path.join(os.path.dirname(__file__),  '..', 'storage', 'minerkey')
 
@@ -34,12 +35,16 @@ class Block:
         miner_priv_wif = readKeyFromFile(miner_wif_priv_file)
         miner_priv = wifKeyToPrivateKey(miner_priv_wif)
         miner_address = fullSettlementPublicAddress(miner_priv)
-        coinbase_tx = CoinbaseTransaction(miner_address)
-        coinbase_tx.calculate_hash()
-        signature, verify_key = signMessage(miner_priv, coinbase_tx.get_hash())
-        coinbase_tx.set_sign(signature, verify_key)
-        serializer = Serializer(coinbase_tx)
-        self.transactions.append(serializer.get_serialized_tx())
+        reward = 50
+        tx = CoinbaseTransaction("{\"inputs\": [{\"tx_id\": \"" + "0" * 64 + "\", \"tx_out_id\": \"" + str(4294967295) + "\", \"tx_script\": \"\", \"value\": \"" + str(reward) + "\"}]}",
+                "{\"outputs\": [{\"address\": \"" + miner_address + "\", \"value\": \"" + str(reward) + "\", \"script_type\": \"p2pkh\"}]}")
+        tx.get_presign_raw_format()
+        tx.calculate_hash()
+        miner_pub = getPublickKey(miner_priv)
+        sender_compressed_pub_key = compressPublicKey(miner_pub)
+        tx.sign_tx(miner_priv)
+        ser_tx = tx.get_signed_raw_format(sender_compressed_pub_key, is_coinbase=1).hex()
+        self.transactions.append(ser_tx)
 
     def validate_transactions(self): # validates all transactions
         pass
