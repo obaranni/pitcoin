@@ -7,8 +7,8 @@ from ecdsa.util import string_to_number, number_to_string
 from ecdsa.curves import SECP256k1
 
 CURVE_ORDER = SECP256k1.order
-input_amount = int(0.0005 * 10 ** 8)
-output_amount = int(0.0002 * 10 ** 8)
+input_amount = int(0.1516 * 10 ** 8)
+output_amount = int(0.1515 * 10 ** 8)
 fee = int(0.0001 * 10 ** 8)
 sender_address = "mv3d5P4kniPrT5owreux438yEtcFUefo71"
 sender_pub = "04C3C6A89E01B4B62621233C8E0C2C26078A2449ABAA837E18F96A1F65D7B8CC8CC5F96F69C917C286BB324A7B400A69ED6FC3CDA20BC292DC9B2414ADD80029D2"
@@ -18,7 +18,28 @@ sender_compressed_pub_bytes = bytes.fromhex(sender_compressed_pub)
 sender_priv = "884a1c97e9feb617ece801bb13ad7251854f9f0821f2f61237accbe085be58af"
 sender_wif_priv = "5JrJuxQ5QhLASMpQgSCZ9Fmzt8Sit8X3h1N9LGWYdXDtBhUxCwB"
 recipient_address = "mv3d5P4kniPrT5owreux438yEtcFUefo71"
-prev_txid = "033407563b276eff738c00dc036020ce6f1d88210ef581f2316e5a3ee98ca51b"
+prev_txid = "2e32e585828d0cd00fdde670fdbd65b7b5d4a12ef7511a3627b59392f46aa2d5"
+
+
+
+def flip_byte_order(string):
+    flipped = "".join(reversed([string[i:i + 2] for i in range(0, len(string), 2)]))
+    return flipped
+
+
+from sys import byteorder
+from hashlib import sha256
+
+## You can put in $data an 80-byte block header to get its header hash,
+## or a raw transaction to get its txid
+data = "01000000019508af76acc0dde184eee47e4ef861cfe43048c6450674ff3ac93f77445feb5a000000006a47304402205b15c520816d375d15c04ce31d3fdc64c4be8b5a15e5fcd6cd0b701df25a5d1402200495c90edb9070868f6f0f7e257471344c9ad1a5ea84ac0ca32315c44adf17f3012102c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8cffffffff01b02be700000000001976a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac00000000"
+hash = sha256(sha256(bytes.fromhex(data)).digest()).digest()
+
+print("Internal-Byte-Order Hash: ", hash.hex())
+print("RPC-Byte-Order Hash:      ", hash[::-1].hex())
+
+
+
 
 
 def ripemd160(x):
@@ -42,9 +63,7 @@ class raw_tx:
     lock_time = struct.pack("<L", 0)
 
 
-def flip_byte_order(string):
-    flipped = "".join(reversed([string[i:i + 2] for i in range(0, len(string), 2)]))
-    return flipped
+
 
 
 def normalize_secret_bytes(privkey_bytes: bytes) -> bytes:
@@ -108,7 +127,7 @@ def make_raw_transaction():
     print(raw_tx_string.hex())
 
     hashed_tx_to_sign = hashlib.sha256(hashlib.sha256(raw_tx_string).digest()).digest()
-
+    print(hashed_tx_to_sign.hex())
 
     pk_bytes = bytes.fromhex(my_private_key_hex)
     sk = ecdsa.SigningKey.from_string(pk_bytes, curve=ecdsa.SECP256k1)

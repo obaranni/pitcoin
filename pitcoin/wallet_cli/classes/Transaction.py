@@ -182,6 +182,7 @@ class Transaction:
                 + self.get_raw_outputs()
                 + self.locktime
         )
+        print("tx_id:", hashlib.sha256(hashlib.sha256(self.real_raw_tx).digest()).hexdigest())
         return self.real_raw_tx
 
     def calculate_hash(self):

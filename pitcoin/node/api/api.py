@@ -65,6 +65,16 @@ def new_block():
     return jsonify('Done')
 
 
+@app.route('/utxo', methods=['GET'])
+def get_utxo():
+    global node
+    address = request.args.get('address')
+
+    utxo = node.get_utxo(address)
+    if not utxo:
+        return jsonify({'utxo': 'Error utxo for ' + address + ' doesn\'t exist'})
+    return jsonify({'utxo': utxo})
+
 @app.route('/addnode', methods=['POST'])
 def add_node():
     global node

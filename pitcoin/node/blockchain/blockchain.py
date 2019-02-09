@@ -1,4 +1,4 @@
-import sys, os, datetime, json, requests, base58
+import sys, os, datetime, json, requests, base58, hashlib
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain', 'tools'))
 from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
@@ -52,15 +52,55 @@ class Blockchain:
         else:
             print("[from: node]: Mining mode: off")
 
+    def execute_script(self, tx, output):
+        return True
+
+    def verify_tx(self, tx):
+        if not self.execute_script(tx, "out"):
+            return False
+        return True
+
+    def spending_outputs(self, txs):
+        for i in txs:
+            tx = Transaction(False, False)
+            tx.set_signed_raw_tx(i)
+            tx_dict = json.loads(tx.deserialize_raw_tx())
+            print(tx_dict)
+            for j in tx_dict['inputs']:
+                output_tx_id = j['prev_tx_id']
+                output_id = j['out_index']
+                print(output_tx_id)
+                print(output_id)
+
+
     def cut_transactions(self):
+        # tx_pool = TxPool()
+        # pool_size = tx_pool.get_pool_size()
+        # if pool_size < TRANSACTIONS_TO_MINE:
+        #     return False
+        # print("[from: node]: Txs in pool: %d. Start mining" % pool_size)
+        # txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
+        # tx_pool.set_txs(txs[TRANSACTIONS_TO_MINE:])
+        # return txs[:TRANSACTIONS_TO_MINE]
         tx_pool = TxPool()
         pool_size = tx_pool.get_pool_size()
-        if pool_size < TRANSACTIONS_TO_MINE:
-            return False
         print("[from: node]: Txs in pool: %d. Start mining" % pool_size)
         txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
-        tx_pool.set_txs(txs[TRANSACTIONS_TO_MINE:])
-        return txs[:TRANSACTIONS_TO_MINE]
+        valid_txs = []
+        for tx in txs:
+            if self.verify_tx(tx):
+                valid_txs.append(tx)
+
+        if len(valid_txs) < TRANSACTIONS_TO_MINE:
+            tx_pool.set_txs(valid_txs)
+            return False
+
+        txs_to_mine = valid_txs[:TRANSACTIONS_TO_MINE]
+        self.spending_outputs(txs_to_mine)
+
+
+        tx_pool.set_txs(valid_txs[TRANSACTIONS_TO_MINE:])
+        return txs_to_mine
 
     def send_new_block_alert(self, peers):
         print("\n[from: node]: Reporting to other nodes about new block")
@@ -100,6 +140,27 @@ class Blockchain:
         self.connect_with_peers(get_chain=False)
         self.challenge = True
 
+    def create_utxo_if_not_exit(self):
+        utxo_file = open(UTXO_FILE, "a+")
+        utxo_file.close()
+
+    def get_utxo(self, address):
+        self.create_utxo_if_not_exit()
+        utxo_file = open(UTXO_FILE, "r")
+        lines = utxo_file.readlines()
+        address_utxo = []
+        for line in lines:
+            if line.find(address) != -1:
+                line = line[:-1].replace('\'', '"')
+                utxo_dict = json.loads(line)
+                address_utxo.append(utxo_dict)
+        print(address_utxo, type(address_utxo))
+        utxo_file.close()
+        if len(address_utxo) > 1:
+            return address_utxo
+        else:
+            return False
+
     def calculate_utxo(self, block, del_old=0):
         if del_old:
             utxo_file = open(UTXO_FILE, "w+")
@@ -108,14 +169,15 @@ class Blockchain:
         result_outputs_dict = ""
         for i in block.transactions:
             tx = Transaction(False, False)
-            print(i)
             tx.set_signed_raw_tx(i)
-            # print(tx.deserialize_raw_tx())
             tx_outputs_dict = json.loads(tx.deserialize_raw_tx())['outputs']
-            # tx_outputs_dict['tx_id'] = json.loads(tx.deserialize_raw_tx())['tx_id']
+            out_id = 0
             for j in tx_outputs_dict:
                 j['address'] = base58.b58encode_check(bytes.fromhex('6f' + j['script'][6:46])).decode('utf-8')
+                j['tx_id'] = hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()
+                j['output_id'] = out_id
                 result_outputs_dict += str(j) + "\n"
+                out_id += 1
         utxo_file.write("%s" % result_outputs_dict)
         utxo_file.close()
 

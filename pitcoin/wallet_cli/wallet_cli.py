@@ -63,6 +63,8 @@ CRED = '\033[91m'
 CGREEN = '\033[92m'
 CEND = '\033[0m'
 
+# mv3d5P4kniPrT5owreux438yEtcFUefo71
+
 # 884a1c97e9feb617ece801bb13ad7251854f9f0821f2f61237accbe085be58af
 
 # send {"inputs": [{"tx_id": "f904ba9b44ae2b68d5663289b52545fdab9c4a9d9a855fe05ab1e8a3cee56814", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00009"}, {"tx_id": "0bcedf6c019a14e7a187b08279f203098a42d336097e372129aad14432b4e768", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.0002"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"}]}
@@ -72,6 +74,8 @@ CEND = '\033[0m'
 # send {"inputs": [{"tx_id": "18776aab24657972ae8fcbb3b2b26a48cd50b55ad47a36af1e60881cf0cac5d8", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1519"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1518", "script_type": "p2pkh"}]}
 
 # send {"inputs": [ {"tx_id": "5aeb5f44773fc93aff740645c64830e4cf61f84e7ee4ee84e1ddc0ac76af0895", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1516"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1515", "script_type": "p2pkh"}]}
+
+# send {"inputs": [ {"tx_id": "2e32e585828d0cd00fdde670fdbd65b7b5d4a12ef7511a3627b59392f46aa2d5", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1515"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1514", "script_type": "p2pkh"}]}
 
 
 status_codes = {
@@ -114,7 +118,6 @@ class WalletCli(cmd.Cmd):
 
     def help_cmdimport(self):
         print("\nhelp cmdimport:\ncmdimport imports private key from command line \"cmdimport *private_key*\".\n")
-
 
     def emptyline(self):
         self.do_help(0)
@@ -199,7 +202,24 @@ class WalletCli(cmd.Cmd):
                 print("amount:", amount)
                 print(json.dumps(content['data']['txs'], indent=4))
             else:
-                print("MY UTXOS")
+                url = pitcoin_node_ip + '/utxo'
+                print(url)
+                params = (('address', ADDRESSES[-1]),)
+                resp = requests.get(url=url, params=params)
+                resp = resp.json()['utxo']
+                if str(resp).find("Error") != -1:
+                    print("outs: 0\namount: 0.0\n[]")
+                else:
+                    count = 0
+                    amount = 0.0
+                    for i in resp:
+                        count += 1
+                        amount += float(i['value'])
+                    print("outs:", count)
+                    print("amount:", amount)
+                    for i in resp:
+                        print(json.dumps(i, indent=4))
+
         except IndexError:
             print("Generate or import private key first")
             return False
@@ -307,7 +327,17 @@ if __name__ == '__main__':
 
 
 
+"""
 
+
+
+
+
+
+01000000 01 9508af76acc0dde184eee47e4ef861cfe43048c6450674ff3ac93f77445feb5a 00000000 6a 47 304402204f967c2118f515c774afefcf8753d77c823a2fba3f00bbef6e5f657c7c53517502205563e4cf2c03790464c8b7f4077f0aa29e53ced07879d79e16d21543423edd2901 21 02c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8cffffffff01b02be700000000001976a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac00000000
+01000000 01 9508af76acc0dde184eee47e4ef861cfe43048c6450674ff3ac93f77445feb5a 00000000 6a 47 3044022007b6c41b03e1646e56abc19b7b6f442e2215b966ae583ff66a27630dd29d0dd702205d22e78ae3fdc33e6dc72411434ad508a616040397a3c87124f402e71d39b4cd01 21 02c3c6a89e01b4b62621233c8e0c2c26078a2449abaa837e18f96a1f65d7b8cc8cffffffff01b02be700000000001976a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac00000000
+
+"""
 
 
 
