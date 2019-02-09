@@ -100,29 +100,31 @@ class Blockchain:
         self.connect_with_peers(get_chain=False)
         self.challenge = True
 
-    def create_utxo_if_not_exist(self):
-        file = open(UTXO_FILE, 'a+')
-        file.close()
-
-    def calculate_utxo(self, block):
-        self.create_utxo_if_not_exist()
-        utxo_file = open(UTXO_FILE, "w+")
+    def calculate_utxo(self, block, del_old=0):
+        if del_old:
+            utxo_file = open(UTXO_FILE, "w+")
+        else:
+            utxo_file = open(UTXO_FILE, "a+")
         result_outputs_dict = ""
         for i in block.transactions:
             tx = Transaction(False, False)
+            print(i)
             tx.set_signed_raw_tx(i)
+            # print(tx.deserialize_raw_tx())
             tx_outputs_dict = json.loads(tx.deserialize_raw_tx())['outputs']
+            # tx_outputs_dict['tx_id'] = json.loads(tx.deserialize_raw_tx())['tx_id']
             for j in tx_outputs_dict:
                 j['address'] = base58.b58encode_check(bytes.fromhex('6f' + j['script'][6:46])).decode('utf-8')
                 result_outputs_dict += str(j) + "\n"
         utxo_file.write("%s" % result_outputs_dict)
+        utxo_file.close()
 
 
     def create_chain(self):
         print("[from: node]: Creating genesis block")
         txs = None
         block = self.mining_hash(self.genesis_block(txs))
-        self.save_block(block, BLOCKCHAIN_DB)
+        self.save_block(block, BLOCKCHAIN_DB, del_old=1)
         print("[from: node]: Done. Current blockchain height:", self.get_chain_length())
 
     def load_last_block_from_db(self, db_file, as_str=0):
@@ -303,11 +305,11 @@ class Blockchain:
         file.write('\n')
         file.close()
 
-    def save_block(self, block, db_file):
+    def save_block(self, block, db_file, del_old=0):
         self.blocks.append(block)
         self.blocks = [self.blocks[-1]]
         self.save_blocks(db_file)
-        self.calculate_utxo(self.blocks[-1])
+        self.calculate_utxo(self.blocks[-1], del_old)
 
     def mining_hash(self, block, complexity=BASE_COMPLEXITY):
         while block.hash[:complexity] != "0" * complexity:
