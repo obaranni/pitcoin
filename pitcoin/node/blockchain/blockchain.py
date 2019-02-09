@@ -114,7 +114,7 @@ class Blockchain:
             tx_outputs_dict = json.loads(tx.deserialize_raw_tx())['outputs']
             for j in tx_outputs_dict:
                 j['address'] = base58.b58encode_check(bytes.fromhex('6f' + j['script'][6:46])).decode('utf-8')
-                result_outputs_dict = str(j) + "\n"
+                result_outputs_dict += str(j) + "\n"
         utxo_file.write("%s" % result_outputs_dict)
 
 
@@ -123,7 +123,6 @@ class Blockchain:
         txs = None
         block = self.mining_hash(self.genesis_block(txs))
         self.save_block(block, BLOCKCHAIN_DB)
-        self.calculate_utxo(self.blocks[-1])
         print("[from: node]: Done. Current blockchain height:", self.get_chain_length())
 
     def load_last_block_from_db(self, db_file, as_str=0):
@@ -308,6 +307,7 @@ class Blockchain:
         self.blocks.append(block)
         self.blocks = [self.blocks[-1]]
         self.save_blocks(db_file)
+        self.calculate_utxo(self.blocks[-1])
 
     def mining_hash(self, block, complexity=BASE_COMPLEXITY):
         while block.hash[:complexity] != "0" * complexity:
