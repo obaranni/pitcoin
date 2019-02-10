@@ -67,6 +67,10 @@ CEND = '\033[0m'
 
 # 884a1c97e9feb617ece801bb13ad7251854f9f0821f2f61237accbe085be58af
 
+# mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z
+
+# 72c72f8bdccd8ec314cf85b68b09a2c0057cf476f6c1b56a7147b85693f586bb
+
 # send {"inputs": [{"tx_id": "f904ba9b44ae2b68d5663289b52545fdab9c4a9d9a855fe05ab1e8a3cee56814", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00009"}, {"tx_id": "0bcedf6c019a14e7a187b08279f203098a42d336097e372129aad14432b4e768", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.0002"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"}]}
 
 # send {"inputs": [{"tx_id": "a7ab8310eb40ff4c4c53814cd2727c64b9d7835dfa82d0f8d14797140062babf", "tx_out_id": "20", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.15262973"}, {"tx_id": "96cf299755eeb25368b02682781be74845679b77bdd575487cf1d35cfbedf3da", "tx_out_id": "1", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00001"}, {"tx_id": "96cf299755eeb25368b02682781be74845679b77bdd575487cf1d35cfbedf3da", "tx_out_id": "2", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00001"}, {"tx_id": "f0ffffb5b35f45b4c4d8f013935d1b275cd56da15872e610407c8a3dc414a16e", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00014999"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.152", "script_type": "p2pkh"}]}
@@ -76,6 +80,8 @@ CEND = '\033[0m'
 # send {"inputs": [ {"tx_id": "5aeb5f44773fc93aff740645c64830e4cf61f84e7ee4ee84e1ddc0ac76af0895", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1516"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1515", "script_type": "p2pkh"}]}
 
 # send {"inputs": [ {"tx_id": "2e32e585828d0cd00fdde670fdbd65b7b5d4a12ef7511a3627b59392f46aa2d5", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1515"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1514", "script_type": "p2pkh"}]}
+
+#   send {"inputs": [ {"tx_id": "81a7a9c9ec67d1a9201b5652938aea603e0ddf4fa35f030f372ebce39c8fe6b5", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "50"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "25", "script_type": "p2pkh"}, {"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "25", "script_type": "p2pkh"}]}
 
 
 status_codes = {
