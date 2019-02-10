@@ -4,7 +4,7 @@ from binascii import unhexlify
 from Transaction import CoinbaseTransaction
 import sys, os, base58
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'tools'))
-from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage, getPublickKey, compressPublicKey
+from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage, getPublickKey, compressPublicKey, getAddresOfPublicKey
 
 from serializer import Serializer
 MINER_PRIV_WIF_FILE = os.path.join(os.path.dirname(__file__),  '..', 'storage', 'minerkey')
@@ -34,7 +34,7 @@ class Block:
     def set_coinbase_transaction(self, miner_wif_priv_file):
         miner_priv_wif = readKeyFromFile(miner_wif_priv_file)
         miner_priv = wifKeyToPrivateKey(miner_priv_wif)
-        miner_address = fullSettlementPublicAddress(miner_priv)
+        miner_address = fullSettlementPublicAddress("72c72f8bdccd8ec314cf85b68b09a2c0057cf476f6c1b56a7147b85693f586bb")
         reward = 50
         tx = CoinbaseTransaction("{\"inputs\": [{\"tx_id\": \"" + "0" * 64 + "\", \"tx_out_id\": \"" + str(4294967295) + "\", \"tx_script\": \"\", \"value\": \"" + str(reward) + "\"}]}",
                 "{\"outputs\": [{\"address\": \"" + miner_address + "\", \"value\": \"" + str(reward) + "\", \"script_type\": \"p2pkh\"}]}")

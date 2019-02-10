@@ -1,20 +1,21 @@
-import sys, os, datetime, json, requests, base58, hashlib
+import sys, os, datetime, json, requests, base58, hashlib, codecs
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain', 'tools'))
 from pending_pool import TxPool
-from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage
+from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage, getAddresOfPublicKey
 from serialized_txs_to_json import txs_to_json
 from blocks_to_json import convert_blocks_to
 from blocks_from_json import convert_last_block_from, convert_by_id_block_from, get_str_block_by_id, convert_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
 from Transaction import CoinbaseTransaction, Transaction
-TRANSACTIONS_TO_MINE = 4
+TRANSACTIONS_TO_MINE = 1
 BASE_COMPLEXITY = 4
 MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
 TMP_BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'tmp_blocks')
 PEERS_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'peers')
 UTXO_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'utxo')
+TMP_UTXO_FILE = os.path.join(os.path.dirname(__file__),  'storage', 'tmp_utxo')
 
 class Blockchain:
 
@@ -26,7 +27,7 @@ class Blockchain:
         self.challenge = True
 
     def set_configs(self, mine, consensus, peers):
-        try:
+        # try:
             print("[from: node]: Configuring a node from a configuration file...")
             if mine == "on":
                 self.change_mine_mode()
@@ -39,10 +40,10 @@ class Blockchain:
             file.write("%s" % one_line_peers)
             file.close()
             print("[from: node]: Configuring done. Current blockchain height:", self.get_chain_length(), end="\n\n")
-        except:
-            print("[from: node]: Configuring failed!\n")
-            return False
-        return True
+        # except:
+        #     print("[from: node]: Configuring failed!\n")
+        #     return False
+            return True
 
     def change_mine_mode(self):
         self.mine_mode = not self.mine_mode
@@ -55,51 +56,73 @@ class Blockchain:
     def execute_script(self, tx, output):
         return True
 
-    def verify_tx(self, tx):
+    def verify_tx(self, raw_tx, utxo_flags):
+        tx = Transaction(False, False)
+        tx.set_signed_raw_tx(raw_tx)
+        tx_dict = json.loads(tx.deserialize_raw_tx())
+        print(tx_dict)
+        tx_inputs = []
+        for j in tx_dict['inputs']:
+            output_tx_id = j['prev_tx_id']
+            output_id = j['out_index']
+            tx_inputs.append({'output_tx_id': output_tx_id,'output_id': output_id})
+
+        inputs_amount = 0
+        for j in tx_inputs:
+            input_found = 0
+            for utxo_flag in utxo_flags:
+                if j['output_tx_id'] == utxo_flag[0]['tx_id'] and j['output_id'] == utxo_flag[0]['output_id']:
+                    input_found = 1
+                    if utxo_flag[1] == 1:
+                        print("[from: node]: BAD TX! INPUT ALREADY SPENT")
+                        return False
+                    utxo_flag[1] = 1
+                inputs_amount += float(utxo_flag[0]['value'])
+            if not input_found:
+                print("[from: node]: BAD TX! CANNOT FIND INPUT!")
+                return False
+
+        outputs_amount = 0.0
+        for i in tx_dict['outputs']:
+            outputs_amount += float(i['value'])
+        if outputs_amount > inputs_amount:
+            print("[from: node]: BAD TX! OUTPUTS VALUE SHOULD BE GREATER THAN INPUTS!")
+            return False
+        print("amount of inputs", inputs_amount, "amount of outputs", outputs_amount)
         if not self.execute_script(tx, "out"):
             return False
         return True
 
-    def spending_outputs(self, txs):
-        for i in txs:
-            tx = Transaction(False, False)
-            tx.set_signed_raw_tx(i)
-            tx_dict = json.loads(tx.deserialize_raw_tx())
-            print(tx_dict)
-            for j in tx_dict['inputs']:
-                output_tx_id = j['prev_tx_id']
-                output_id = j['out_index']
-                print(output_tx_id)
-                print(output_id)
-
-
     def cut_transactions(self):
-        # tx_pool = TxPool()
-        # pool_size = tx_pool.get_pool_size()
-        # if pool_size < TRANSACTIONS_TO_MINE:
-        #     return False
-        # print("[from: node]: Txs in pool: %d. Start mining" % pool_size)
-        # txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
-        # tx_pool.set_txs(txs[TRANSACTIONS_TO_MINE:])
-        # return txs[:TRANSACTIONS_TO_MINE]
         tx_pool = TxPool()
         pool_size = tx_pool.get_pool_size()
+        if pool_size < TRANSACTIONS_TO_MINE:
+            return False
         print("[from: node]: Txs in pool: %d. Start mining" % pool_size)
         txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
         valid_txs = []
+        utxo = self.get_utxo("address")
+        utxo_flags = []
+        for i in utxo:
+            utxo_flags.append([i, 0])
         for tx in txs:
-            if self.verify_tx(tx):
+            if self.verify_tx(tx, utxo_flags):
                 valid_txs.append(tx)
-
-        if len(valid_txs) < TRANSACTIONS_TO_MINE:
+        if len(valid_txs) < TRANSACTIONS_TO_MINE and len(valid_txs) > 0:
             tx_pool.set_txs(valid_txs)
             return False
+        utxo_file = open(UTXO_FILE, "w+")
+        for i in utxo_flags:
+            if i[1] == 0:
+                utxo_file.write("%s\n" % str(i[0]))
+
+
 
         txs_to_mine = valid_txs[:TRANSACTIONS_TO_MINE]
-        self.spending_outputs(txs_to_mine)
 
 
         tx_pool.set_txs(valid_txs[TRANSACTIONS_TO_MINE:])
+        utxo_file.close()
         return txs_to_mine
 
     def send_new_block_alert(self, peers):
@@ -140,32 +163,45 @@ class Blockchain:
         self.connect_with_peers(get_chain=False)
         self.challenge = True
 
-    def create_utxo_if_not_exit(self):
-        utxo_file = open(UTXO_FILE, "a+")
+    def create_utxo_if_not_exit(self, utxo_file_path=UTXO_FILE):
+        utxo_file = open(utxo_file_path, "a+")
         utxo_file.close()
 
-    def get_utxo(self, address):
-        self.create_utxo_if_not_exit()
-        utxo_file = open(UTXO_FILE, "r")
+    def get_balance(self, address):
+        utxo = self.get_utxo(address)
+        balance = 0
+        if not utxo:
+            return balance
+        for i in utxo:
+            balance += float(i['value'])
+        return balance
+
+    def get_utxo(self, address, utxo_file_path=UTXO_FILE):
+        self.create_utxo_if_not_exit(utxo_file_path)
+        print("PATH", utxo_file_path)
+        utxo_file = open(utxo_file_path, "r")
         lines = utxo_file.readlines()
+        print(lines)
         address_utxo = []
         for line in lines:
             if line.find(address) != -1:
                 line = line[:-1].replace('\'', '"')
                 utxo_dict = json.loads(line)
                 address_utxo.append(utxo_dict)
-        print(address_utxo, type(address_utxo))
         utxo_file.close()
-        if len(address_utxo) > 1:
+        print(address_utxo)
+        if len(address_utxo) > 0:
             return address_utxo
         else:
             return False
 
-    def calculate_utxo(self, block, del_old=0):
+    def calculate_utxo(self, block, utxo_file_path=UTXO_FILE, del_old=0, save=1):
+        self.create_utxo_if_not_exit(utxo_file_path)
         if del_old:
-            utxo_file = open(UTXO_FILE, "w+")
+            utxo_file = open(utxo_file_path, "w+")
         else:
-            utxo_file = open(UTXO_FILE, "a+")
+            utxo_file = open(utxo_file_path, "a+")
+        utxos_dict = []
         result_outputs_dict = ""
         for i in block.transactions:
             tx = Transaction(False, False)
@@ -176,17 +212,23 @@ class Blockchain:
                 j['address'] = base58.b58encode_check(bytes.fromhex('6f' + j['script'][6:46])).decode('utf-8')
                 j['tx_id'] = hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()
                 j['output_id'] = out_id
+                utxos_dict.append(j)
                 result_outputs_dict += str(j) + "\n"
                 out_id += 1
-        utxo_file.write("%s" % result_outputs_dict)
+        if save:
+            utxo_file.write("%s" % result_outputs_dict)
         utxo_file.close()
-
+        if len(utxos_dict) < 1:
+            return False
+        else:
+            return utxos_dict
 
     def create_chain(self):
         print("[from: node]: Creating genesis block")
         txs = None
         block = self.mining_hash(self.genesis_block(txs))
-        self.save_block(block, BLOCKCHAIN_DB, del_old=1)
+        self.save_block(block, BLOCKCHAIN_DB)
+        self.calculate_utxo(self.blocks[-1], UTXO_FILE, del_old=1)
         print("[from: node]: Done. Current blockchain height:", self.get_chain_length())
 
     def load_last_block_from_db(self, db_file, as_str=0):
@@ -217,7 +259,8 @@ class Blockchain:
 
     def take_the_chain_as_own(self, append):
         self.create_db_if_not_exist(BLOCKCHAIN_DB)
-        if append:
+        self.create_utxo_if_not_exit(UTXO_FILE)
+        if append > 1:
             new_blocks = open(TMP_BLOCKCHAIN_DB, 'r')
             new_blocks_lines = new_blocks.readlines()
             new_blocks.close()
@@ -225,7 +268,16 @@ class Blockchain:
             old_blocks.writelines(new_blocks_lines)
             old_blocks.close()
             os.remove(TMP_BLOCKCHAIN_DB)
+            new_utxo = open(TMP_UTXO_FILE, 'r')
+            new_utxo_lines = new_utxo.readlines()
+            new_utxo.close()
+            old_utxo = open(UTXO_FILE, 'a')
+            old_utxo.writelines(new_utxo_lines)
+            old_utxo.close()
+            os.remove(TMP_UTXO_FILE)
         else:
+            os.remove(UTXO_FILE)
+            os.rename(TMP_UTXO_FILE, UTXO_FILE)
             os.remove(BLOCKCHAIN_DB)
             os.rename(TMP_BLOCKCHAIN_DB, BLOCKCHAIN_DB)
 
@@ -256,12 +308,10 @@ class Blockchain:
             return 1
 
     def fetch_best_chain(self, peer):
-        try:
+        # try:
             i = self.do_i_need_all_chain(peer)
-            if i == 1:
-                append = 0
-            else:
-                append = 1
+            print("ska", i)
+            append = i
             self.blocks = []
             while True:
                 params = (('height', str(i)),)
@@ -272,7 +322,7 @@ class Blockchain:
                 block = convert_block_from((resp.json())['block'])
                 self.save_block(block, TMP_BLOCKCHAIN_DB)
                 i += 1
-            if self.is_valid_chain(TMP_BLOCKCHAIN_DB):
+            if self.is_valid_chain(TMP_BLOCKCHAIN_DB, TMP_UTXO_FILE, append - 1):
                 print("[from: node]: Chain is valid. Using as own")
                 self.take_the_chain_as_own(append)
             else:
@@ -281,12 +331,12 @@ class Blockchain:
                 self.blocks = self.load_last_block_from_db(BLOCKCHAIN_DB)
                 return False
             print("[from: node]: Fetching done. New chain length:", self.get_chain_length(), end="\n\n")
-        except requests.exceptions.InvalidURL:
-            print("[from: node]: Failed! Invalid url!")
-        except requests.exceptions.ConnectionError:
-            print("[from: node]: Failed! Connection error!")
-        except:
-            print("[from: node]: Failed! Connection error!")
+        # except requests.exceptions.InvalidURL:
+        #     print("[from: node]: Failed! Invalid url!")
+        # except requests.exceptions.ConnectionError:
+        #     print("[from: node]: Failed! Connection error!")
+        # except:
+        #     print("[from: node]: Failed! Connection error!")
 
     def peers_chain_lengths(self, peers):
         i = 0
@@ -355,7 +405,58 @@ class Blockchain:
     def resolve_conflicts(self):
         pass
 
-    def is_valid_chain(self, db_file):
+    def is_valid_chain(self, db_file, utxo_file_path, block_id=0):
+        self.create_db_if_not_exist(db_file)
+        block_count = block_id
+        print(block_id)
+
+        while True:
+            block, block_json = self.get_block_by_id(block_count, db_file)
+            print(block_json)
+            if not block:
+                break
+
+
+
+            old_utxo = self.get_utxo("address", utxo_file_path)
+            print(old_utxo)
+            if old_utxo:
+                old_utxo_flags = [[i, 0] for i in old_utxo]
+                print("o1", old_utxo_flags)
+                for tx in block.transactions:
+                    if tx != block.transactions[-1]:
+                        if not self.verify_tx(tx, old_utxo_flags):
+                            return False
+                print("o2", old_utxo_flags)
+            else:
+                old_utxo_flags = False
+
+
+
+            if old_utxo_flags:
+                # print("o1", old_utxo_flags)
+                utxo_file = open(utxo_file_path, "w+")
+                for i in old_utxo_flags:
+                    if i[1] == 0:
+                        utxo_file.write("%s\n" % str(i[0]))
+                utxo_file.close()
+            else:
+                utxo_file = open(utxo_file_path, "w+")
+                utxo_file.close()
+
+
+
+
+            new_utxo = self.calculate_utxo(block, utxo_file_path, save=0)
+            if new_utxo:
+                # print("o2", new_utxo)
+                utxo_file = open(utxo_file_path, "a+")
+                for i in new_utxo:
+                    if i:
+                        utxo_file.write("%s\n" % str(i))
+                utxo_file.close()
+
+            block_count += 1
         return True
 
     def save_blocks(self, db_file):
@@ -371,7 +472,6 @@ class Blockchain:
         self.blocks.append(block)
         self.blocks = [self.blocks[-1]]
         self.save_blocks(db_file)
-        self.calculate_utxo(self.blocks[-1], del_old)
 
     def mining_hash(self, block, complexity=BASE_COMPLEXITY):
         while block.hash[:complexity] != "0" * complexity:
@@ -389,7 +489,7 @@ class Blockchain:
         new_block = self.mining_hash(block)
         if new_block is None:
             return False
-        self.save_block(new_block, BLOCKCHAIN_DB)
+        self.save_block(new_block, BLOCKCHAIN_DB, UTXO_FILE)
         return True
 
     def genesis_block(self, txs):
@@ -445,11 +545,11 @@ class Blockchain:
         result_line = ''
         file = open(db_file, 'r')
         lines = file.readlines()
+        file.close()
         for line in lines:
             result_line += line
         block_json = get_str_block_by_id(result_line, id)
         block = convert_by_id_block_from(result_line, id)
-        file.close()
         return block, block_json
 
     def create_peers_if_not_exist(self):

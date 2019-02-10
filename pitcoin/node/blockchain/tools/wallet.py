@@ -6,8 +6,6 @@ import codecs
 import ecdsa
 
 from binascii import hexlify, unhexlify
-DECIMALS = 1         # create header ???
-MAX_AMOUNT = 6553.5  # 6553.5 from max short 65535 / 10
 
 STORAGE_FILE = "storage/address.txt"
 
@@ -24,12 +22,12 @@ def privateKeyToWIF(privKey): #TODO: check is valid, testnet or mainnet
 def wifKeyToPrivateKey(wifKey):
     decode_base = None
     try:
-        decode_base = base58.b58decode(wifKey.encode('utf-8'))
-        decode_base = codecs.encode(decode_base, 'hex')[2:-8]
+        decode_base = base58.b58decode(wifKey)
+        decode_base = decode_base[1:-4]
     except:
         print("Bed wif key format")
         return decode_base
-    return decode_base.decode('utf-8')
+    return decode_base.hex()
 
 
 def readPrivateKey(filepath):   #TODO: check is file exist etc
