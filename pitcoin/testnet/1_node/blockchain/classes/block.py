@@ -11,8 +11,9 @@ MINER_PRIV_WIF_FILE = os.path.join(os.path.dirname(__file__),  '..', 'storage', 
 
 class Block:
     def __init__(self, timestamp, previous_hash,
-                 transactions, block_id, reward, nonce=0, block_hash=None, merkle_root=None):
+                 transactions, block_id, reward, difficulty, nonce=0, block_hash=None, merkle_root=None):
         self.reward = reward
+        self.difficulty = difficulty
         if transactions is None:
             transactions = []
         self.timestamp = timestamp

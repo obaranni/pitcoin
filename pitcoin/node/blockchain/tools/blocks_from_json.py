@@ -27,7 +27,7 @@ def get_block_symb(blocks_json, start_point=None):
 def convert_last_block_from(blocks_json):
     end, start = get_block_symb(blocks_json)
     last_block_json = json.loads(blocks_json[start:end])
-    block = Block(last_block_json['timestamp'], last_block_json['prev_hash'], last_block_json['transactions'], int(last_block_json['id']), last_block_json['nonce'], last_block_json['hash'])
+    block = Block(last_block_json['timestamp'], last_block_json['prev_hash'], last_block_json['transactions'], int(last_block_json['id']), int(last_block_json['reward']), int(last_block_json['difficulty']), last_block_json['nonce'], last_block_json['hash'])
     return block
 
 
@@ -47,7 +47,7 @@ def get_str_block_by_id(blocks_json, id):
 
 
 def convert_block_from(block_json):
-    block = Block(block_json['timestamp'], block_json['prev_hash'], block_json['transactions'], int(block_json['id']), block_json['nonce'], block_json['hash'], block_json['merkle_root'])
+    block = Block(block_json['timestamp'], block_json['prev_hash'], block_json['transactions'], int(block_json['id']), int(block_json['reward']), int(block_json['difficulty']), block_json['nonce'], block_json['hash'], block_json['merkle_root'])
     return block
 
 

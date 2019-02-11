@@ -421,7 +421,7 @@ class Blockchain:
 
         while True:
             block, block_json = self.get_block_by_id(block_count, db_file)
-            print(block_json)
+            print("block", block_json)
             if not block:
                 break
 
@@ -431,6 +431,7 @@ class Blockchain:
             if old_utxo:
                 old_utxo_flags = [[i, 0] for i in old_utxo]
                 for tx in block.transactions:
+                    print("tx", tx)
                     if tx != block.transactions[-1]:
                         if not self.verify_tx(tx, old_utxo_flags):
                             return False
@@ -501,11 +502,11 @@ class Blockchain:
         else:
             self.reward = self.blocks[-1].reward
 
-        block = Block(self.get_timestamp(), prev_hash, txs, self.blocks[-1].block_id + 1, self.reward)
+        self.difficulty = self.calculate_difficulty(self.blocks[-1].timestamp,
+                                                    self.get_timestamp())
+        block = Block(self.get_timestamp(), prev_hash, txs, self.blocks[-1].block_id + 1, self.reward, self.difficulty)
         block.calculate_merkle_root()
         block.calculate_hash()
-        self.difficulty = self.calculate_difficulty(self.blocks[-1].timestamp,
-                                                    block.timestamp)
         new_block = self.mining_hash(block, self.difficulty)
         if new_block is None:
             return False
@@ -514,7 +515,7 @@ class Blockchain:
         return True
 
     def genesis_block(self, txs):
-        genesis_block = Block(self.get_timestamp(), "0" * 64, txs, 0, self.reward)
+        genesis_block = Block(self.get_timestamp(), "0" * 64, txs, 0, self.reward, BASE_COMPLEXITY)
         genesis_block.calculate_merkle_root()
         genesis_block.calculate_hash()
         return genesis_block
