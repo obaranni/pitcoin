@@ -267,19 +267,11 @@ class Blockchain:
             old_blocks = open(BLOCKCHAIN_DB, 'a')
             old_blocks.writelines(new_blocks_lines)
             old_blocks.close()
-            os.remove(TMP_BLOCKCHAIN_DB)
-            new_utxo = open(TMP_UTXO_FILE, 'r')
-            new_utxo_lines = new_utxo.readlines()
-            new_utxo.close()
-            old_utxo = open(UTXO_FILE, 'a')
-            old_utxo.writelines(new_utxo_lines)
-            old_utxo.close()
-            os.remove(TMP_UTXO_FILE)
         else:
-            os.remove(UTXO_FILE)
-            os.rename(TMP_UTXO_FILE, UTXO_FILE)
             os.remove(BLOCKCHAIN_DB)
             os.rename(TMP_BLOCKCHAIN_DB, BLOCKCHAIN_DB)
+        os.remove(UTXO_FILE)
+        os.rename(TMP_UTXO_FILE, UTXO_FILE)
 
     def do_i_need_all_chain(self, peer):
         if len(self.blocks) < 1:
@@ -308,7 +300,7 @@ class Blockchain:
             return 1
 
     def fetch_best_chain(self, peer):
-        # try:
+        try:
             i = self.do_i_need_all_chain(peer)
             print("ska", i)
             append = i
@@ -328,15 +320,19 @@ class Blockchain:
             else:
                 print("[from: node]: Invalid chain! Using own")
                 self.blocks = []
-                self.blocks = self.load_last_block_from_db(BLOCKCHAIN_DB)
+                self.blocks = [self.load_last_block_from_db(BLOCKCHAIN_DB)]
+                if os.path.isfile(TMP_UTXO_FILE):
+                    os.remove(TMP_UTXO_FILE)
+                if os.path.isfile(TMP_BLOCKCHAIN_DB):
+                    os.remove(TMP_BLOCKCHAIN_DB)
                 return False
             print("[from: node]: Fetching done. New chain length:", self.get_chain_length(), end="\n\n")
-        # except requests.exceptions.InvalidURL:
-        #     print("[from: node]: Failed! Invalid url!")
-        # except requests.exceptions.ConnectionError:
-        #     print("[from: node]: Failed! Connection error!")
-        # except:
-        #     print("[from: node]: Failed! Connection error!")
+        except requests.exceptions.InvalidURL:
+            print("[from: node]: Failed! Invalid url!")
+        except requests.exceptions.ConnectionError:
+            print("[from: node]: Failed! Connection error!")
+        except:
+            print("[from: node]: Failed! Connection error!")
 
     def peers_chain_lengths(self, peers):
         i = 0
@@ -408,7 +404,16 @@ class Blockchain:
     def is_valid_chain(self, db_file, utxo_file_path, block_id=0):
         self.create_db_if_not_exist(db_file)
         block_count = block_id
-        print(block_id)
+
+        if block_count != 0:
+            file = open(UTXO_FILE, 'r')
+            lines = file.readlines()
+            file.close()
+            file = open(TMP_UTXO_FILE, 'w+')
+            for line in lines:
+                file.write("%s" % line)
+            file.close()
+
 
         while True:
             block, block_json = self.get_block_by_id(block_count, db_file)
@@ -419,22 +424,18 @@ class Blockchain:
 
 
             old_utxo = self.get_utxo("address", utxo_file_path)
-            print(old_utxo)
             if old_utxo:
                 old_utxo_flags = [[i, 0] for i in old_utxo]
-                print("o1", old_utxo_flags)
                 for tx in block.transactions:
                     if tx != block.transactions[-1]:
                         if not self.verify_tx(tx, old_utxo_flags):
                             return False
-                print("o2", old_utxo_flags)
             else:
                 old_utxo_flags = False
 
 
 
             if old_utxo_flags:
-                # print("o1", old_utxo_flags)
                 utxo_file = open(utxo_file_path, "w+")
                 for i in old_utxo_flags:
                     if i[1] == 0:
@@ -443,9 +444,6 @@ class Blockchain:
             else:
                 utxo_file = open(utxo_file_path, "w+")
                 utxo_file.close()
-
-
-
 
             new_utxo = self.calculate_utxo(block, utxo_file_path, save=0)
             if new_utxo:
@@ -489,7 +487,8 @@ class Blockchain:
         new_block = self.mining_hash(block)
         if new_block is None:
             return False
-        self.save_block(new_block, BLOCKCHAIN_DB, UTXO_FILE)
+        self.save_block(new_block, BLOCKCHAIN_DB)
+        self.calculate_utxo(self.blocks[-1], UTXO_FILE)
         return True
 
     def genesis_block(self, txs):
