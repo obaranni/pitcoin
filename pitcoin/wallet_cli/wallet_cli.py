@@ -81,9 +81,11 @@ CEND = '\033[0m'
 
 # send {"inputs": [ {"tx_id": "2e32e585828d0cd00fdde670fdbd65b7b5d4a12ef7511a3627b59392f46aa2d5", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1515"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1514", "script_type": "p2pkh"}]}
 
-#   send {"inputs": [ {"tx_id": "81a7a9c9ec67d1a9201b5652938aea603e0ddf4fa35f030f372ebce39c8fe6b5", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "50"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "25", "script_type": "p2pkh"}, {"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "25", "script_type": "p2pkh"}]}
+#  50 input send {"inputs": [ {"tx_id": "81a7a9c9ec67d1a9201b5652938aea603e0ddf4fa35f030f372ebce39c8fe6b5", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "50"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "25", "script_type": "p2pkh"}, {"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "25", "script_type": "p2pkh"}]}
+# 25 input   send {"inputs": [ {"tx_id": "ee24a98524ed63d8cb78007c980dab5ae8c027d871d72f37ca5a7159679dbc70", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "25"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "12.5", "script_type": "p2pkh"}, {"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "12.5", "script_type": "p2pkh"}]}
+# 12.5 input  send {"inputs": [ {"tx_id": "3722bbcbf89f6ac126c7f38e59d960071118b036f1c99c88d9873d81701a9065", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "12.5"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "6.25", "script_type": "p2pkh"}, {"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "6.25", "script_type": "p2pkh"}]}
 
-
+# 6.5 input  send {"inputs": [ {"tx_id": "04ba1b39e59dc7540a27ac3a288742277ecac5129ba97064402b7e8396491aef", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "6.25"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "3.125", "script_type": "p2pkh"}, {"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "3.125", "script_type": "p2pkh"}]}
 status_codes = {
     "Transaction pull i empty": 101,
     "Node added": 102,

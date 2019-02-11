@@ -9,7 +9,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
 from Transaction import CoinbaseTransaction, Transaction
 TRANSACTIONS_TO_MINE = 1
-BASE_COMPLEXITY = 4
+BASE_COMPLEXITY = 1
+BASE_REWARD = 50
 MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
 TMP_BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'tmp_blocks')
@@ -25,9 +26,11 @@ class Blockchain:
         self.consensus_mode = False
         self.load_chain()
         self.challenge = True
+        self.difficulty = BASE_COMPLEXITY
+        self.reward = BASE_REWARD
 
     def set_configs(self, mine, consensus, peers):
-        # try:
+        try:
             print("[from: node]: Configuring a node from a configuration file...")
             if mine == "on":
                 self.change_mine_mode()
@@ -40,10 +43,10 @@ class Blockchain:
             file.write("%s" % one_line_peers)
             file.close()
             print("[from: node]: Configuring done. Current blockchain height:", self.get_chain_length(), end="\n\n")
-        # except:
-        #     print("[from: node]: Configuring failed!\n")
-        #     return False
-            return True
+        except:
+            print("[from: node]: Configuring failed!\n")
+            return False
+        return True
 
     def change_mine_mode(self):
         self.mine_mode = not self.mine_mode
@@ -447,7 +450,6 @@ class Blockchain:
 
             new_utxo = self.calculate_utxo(block, utxo_file_path, save=0)
             if new_utxo:
-                # print("o2", new_utxo)
                 utxo_file = open(utxo_file_path, "a+")
                 for i in new_utxo:
                     if i:
@@ -472,6 +474,7 @@ class Blockchain:
         self.save_blocks(db_file)
 
     def mining_hash(self, block, complexity=BASE_COMPLEXITY):
+        print("[from: node]: Mining with difficulty", complexity)
         while block.hash[:complexity] != "0" * complexity:
             if not self.challenge:
                 return None
@@ -479,12 +482,30 @@ class Blockchain:
             block.calculate_hash()
         return block
 
+    def get_difficulty(self):
+        return self.difficulty
+
+    def calculate_difficulty(self, prev_time, new_time):
+        if new_time - prev_time < 15:
+            return self.difficulty + 1
+        elif new_time - prev_time > 15 and self.difficulty > BASE_COMPLEXITY:
+            return self.difficulty - 1
+        else:
+            return self.difficulty
+
     def create_block(self, txs):
         prev_hash = self.blocks[-1].hash
-        block = Block(self.get_timestamp(), prev_hash, txs, self.blocks[-1].block_id + 1)
+        if (self.blocks[-1].block_id + 1) % 5 == 0:
+            self.reward = round(self.blocks[-1].reward / 2, 8)
+        else:
+            self.reward = self.blocks[-1].reward
+
+        block = Block(self.get_timestamp(), prev_hash, txs, self.blocks[-1].block_id + 1, self.reward)
         block.calculate_merkle_root()
         block.calculate_hash()
-        new_block = self.mining_hash(block)
+        self.difficulty = self.calculate_difficulty(self.blocks[-1].timestamp,
+                                                    block.timestamp)
+        new_block = self.mining_hash(block, self.difficulty)
         if new_block is None:
             return False
         self.save_block(new_block, BLOCKCHAIN_DB)
@@ -492,7 +513,7 @@ class Blockchain:
         return True
 
     def genesis_block(self, txs):
-        genesis_block = Block(self.get_timestamp(), "0" * 64, txs, 0)
+        genesis_block = Block(self.get_timestamp(), "0" * 64, txs, 0, self.reward)
         genesis_block.calculate_merkle_root()
         genesis_block.calculate_hash()
         return genesis_block

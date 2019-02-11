@@ -11,7 +11,8 @@ MINER_PRIV_WIF_FILE = os.path.join(os.path.dirname(__file__),  '..', 'storage', 
 
 class Block:
     def __init__(self, timestamp, previous_hash,
-                 transactions, block_id, nonce=0, block_hash=None, merkle_root=None):
+                 transactions, block_id, reward, nonce=0, block_hash=None, merkle_root=None):
+        self.reward = reward
         if transactions is None:
             transactions = []
         self.timestamp = timestamp
@@ -35,9 +36,8 @@ class Block:
         miner_priv_wif = readKeyFromFile(miner_wif_priv_file)
         miner_priv = wifKeyToPrivateKey(miner_priv_wif)
         miner_address = fullSettlementPublicAddress("72c72f8bdccd8ec314cf85b68b09a2c0057cf476f6c1b56a7147b85693f586bb")
-        reward = 50
-        tx = CoinbaseTransaction("{\"inputs\": [{\"tx_id\": \"" + "0" * 64 + "\", \"tx_out_id\": \"" + str(4294967295) + "\", \"tx_script\": \"\", \"value\": \"" + str(reward) + "\"}]}",
-                "{\"outputs\": [{\"address\": \"" + miner_address + "\", \"value\": \"" + str(reward) + "\", \"script_type\": \"p2pkh\"}]}")
+        tx = CoinbaseTransaction("{\"inputs\": [{\"tx_id\": \"" + "0" * 64 + "\", \"tx_out_id\": \"" + str(4294967295) + "\", \"tx_script\": \"\", \"value\": \"" + str(self.reward) + "\"}]}",
+                "{\"outputs\": [{\"address\": \"" + miner_address + "\", \"value\": \"" + str(self.reward) + "\", \"script_type\": \"p2pkh\"}]}")
         tx.get_presign_raw_format()
         tx.calculate_hash()
         miner_pub = getPublickKey(miner_priv)

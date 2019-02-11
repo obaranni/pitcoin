@@ -7,7 +7,7 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 # Create the application instance
 app = Flask(__name__)
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 
 
