@@ -64,8 +64,19 @@ CGREEN = '\033[92m'
 CEND = '\033[0m'
 
 # mv3d5P4kniPrT5owreux438yEtcFUefo71
-
 # 884a1c97e9feb617ece801bb13ad7251854f9f0821f2f61237accbe085be58af
+
+# miner keys
+# mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z
+# 72c72f8bdccd8ec314cf85b68b09a2c0057cf476f6c1b56a7147b85693f586bb
+
+# send {"inputs": [ {"tx_id": "7c9feeba219de9db5b32c2dab5ea98a8f147ab4bd892036882d0843836321e23", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "25"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "12.5", "script_type": "p2pkh"}, {"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": 12.5", "script_type": "p2pkh"}]}
+
+# send {"inputs": [{"tx_id": "d8464343cd1c8ed162dd14be5375161b50420c9f80894f805dd9023b881ae1bd", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "50"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "54", "script_type": "p2pkh"}]}
+
+# send {"inputs": [ {"tx_id": "89c961df965e073dd6fcf2433ae80d12707e9ee8961b5605f58c51110768447e", "tx_out_id": "1", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "15"}, {"tx_id": "310b654bd44903f8a059326fd4449a8c584d27340b2f3aaeeba59c508412e49e", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "35"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "50", "script_type": "p2pkh"}]}
+
+# send {"inputs": [ {"tx_id": "7047761fd862aed8482c04c91ba9f74235b05ba9defed1030308749ddca15087", "tx_out_id": "1", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "25"}, {"tx_id": "89c961df965e073dd6fcf2433ae80d12707e9ee8961b5605f58c51110768447e", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "10"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "35", "script_type": "p2pkh"}]}
 
 # send {"inputs": [{"tx_id": "f904ba9b44ae2b68d5663289b52545fdab9c4a9d9a855fe05ab1e8a3cee56814", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.00009"}, {"tx_id": "0bcedf6c019a14e7a187b08279f203098a42d336097e372129aad14432b4e768", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.0002"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"},{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.00009", "script_type": "p2pkh"}]}
 
@@ -73,10 +84,11 @@ CEND = '\033[0m'
 
 # send {"inputs": [{"tx_id": "18776aab24657972ae8fcbb3b2b26a48cd50b55ad47a36af1e60881cf0cac5d8", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1519"}]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1518", "script_type": "p2pkh"}]}
 
-# send {"inputs": [ {"tx_id": "5aeb5f44773fc93aff740645c64830e4cf61f84e7ee4ee84e1ddc0ac76af0895", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1516"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1515", "script_type": "p2pkh"}]}
+# send {"inputs": [ {"tx_id": "a15c57bde1a21736944eadab9eab64753a1fe47c717a24557b8c1baa2f0f15a1", "tx_out_id": "1", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "12.5"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "6.25", "script_type": "p2pkh"}, {"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "6.25", "script_type": "p2pkh"}]}
 
-# send {"inputs": [ {"tx_id": "2e32e585828d0cd00fdde670fdbd65b7b5d4a12ef7511a3627b59392f46aa2d5", "tx_out_id": "0", "tx_script": "76a9149f5e9ced489eb7ed8157b533e4199aad1a9b50b288ac", "value": "0.1515"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "0.1514", "script_type": "p2pkh"}]}
+# miner sends money send {"inputs": [ {"tx_id": "81a7a9c9ec67d1a9201b5652938aea603e0ddf4fa35f030f372ebce39c8fe6b5", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "50"} ]} {"outputs": [{"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "25", "script_type": "p2pkh"}, {"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "25", "script_type": "p2pkh"}]}
 
+# send {"inputs": [ {"tx_id": "2bbc4ef6028670b1d8ad3b8576846249a214eeca79293972b1d5e4a28b97bdfc", "tx_out_id": "0", "tx_script": "76a914a923f76a792ec7ebb12d0340f71565c7e344eaa888ac", "value": "25"} ]} {"outputs": [{"address": "mvwHaU4aRhtwvHN2fMGvvXtkikLfUVVe9z", "value": "10", "script_type": "p2pkh"}, {"address": "mv3d5P4kniPrT5owreux438yEtcFUefo71", "value": "15", "script_type": "p2pkh"}]}
 
 status_codes = {
     "Transaction pull i empty": 101,
