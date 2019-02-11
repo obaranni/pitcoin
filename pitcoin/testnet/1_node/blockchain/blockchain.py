@@ -182,10 +182,8 @@ class Blockchain:
 
     def get_utxo(self, address, utxo_file_path=UTXO_FILE):
         self.create_utxo_if_not_exit(utxo_file_path)
-        print("PATH", utxo_file_path)
         utxo_file = open(utxo_file_path, "r")
         lines = utxo_file.readlines()
-        print(lines)
         address_utxo = []
         for line in lines:
             if line.find(address) != -1:
@@ -193,7 +191,6 @@ class Blockchain:
                 utxo_dict = json.loads(line)
                 address_utxo.append(utxo_dict)
         utxo_file.close()
-        print(address_utxo)
         if len(address_utxo) > 0:
             return address_utxo
         else:
@@ -306,7 +303,6 @@ class Blockchain:
     def fetch_best_chain(self, peer):
         try:
             i = self.do_i_need_all_chain(peer)
-            print("ska", i)
             append = i
             self.blocks = []
             while True:
@@ -421,7 +417,6 @@ class Blockchain:
 
         while True:
             block, block_json = self.get_block_by_id(block_count, db_file)
-            print("block", block_json)
             if not block:
                 break
 
@@ -431,7 +426,6 @@ class Blockchain:
             if old_utxo:
                 old_utxo_flags = [[i, 0] for i in old_utxo]
                 for tx in block.transactions:
-                    print("tx", tx)
                     if tx != block.transactions[-1]:
                         if not self.verify_tx(tx, old_utxo_flags):
                             return False

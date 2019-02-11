@@ -68,7 +68,6 @@ class Transaction:
 
     def validate_input(self, input):
         try:
-            print(input)
             int(input['tx_id'], 16)
             if len(input['tx_id']) != 64:
                 raise BadHash

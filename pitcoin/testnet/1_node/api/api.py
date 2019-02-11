@@ -65,6 +65,15 @@ def new_block():
     return jsonify('Done')
 
 
+@app.route('/difficulty', methods=['GET'])
+def get_difficulty():
+    global node
+    request.args.get('address')
+    difficulty = node.get_difficulty()
+    if not difficulty:
+        return jsonify({'difficulty': 'Error'})
+    return jsonify({'difficulty': difficulty})
+
 @app.route('/utxo', methods=['GET'])
 def get_utxo():
     global node
