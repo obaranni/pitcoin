@@ -2,7 +2,7 @@ from flask import  Flask, request, jsonify
 import sys, os, json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain'))
 from blockchain import Blockchain
-import logging
+import logging, threading, time
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 # Create the application instance
@@ -56,11 +56,12 @@ def set_consensus():
 @app.route('/newblock', methods=['GET'])
 def new_block():
     global node
-    print("\n[from: node]: Someone mined a new block")
     node.challenge = False
     if node.consensus_mode:
+        print("[from: node]: Someone mined a new block")
         node.get_new_block_alert()
     else:
+        print("\n[from: node]: Someone mined a new block")
         print("[from: node]: please run consensus mode to fetch bigger chain")
     return jsonify('Done')
 
@@ -178,6 +179,39 @@ def print_bad_config():
           "5011\",\n\t\t\"127.0.0.1:5012\"\n\t]\n}")
 
 
+def start_server(host, port):
+    app.run(host=host, port=port, threaded=True)
+
+
+def start_mining():
+    global node
+    node.start_mining()
+
+
+class MiningThread(threading.Thread):
+    def __init__(self, thread_id, name, counter):
+        threading.Thread.__init__(self)
+        self.thread_id = thread_id
+        self.name = name
+        self.counter = counter
+
+    def run(self):
+        start_mining()
+
+
+class ServerThread(threading.Thread):
+    def __init__(self, thread_id, name, counter, host, port):
+        threading.Thread.__init__(self)
+        self.thread_id = thread_id
+        self.name = name
+        self.counter = counter
+        self.host = host
+        self.port = port
+
+    def run(self):
+        start_server(self.host, self.port)
+
+
 def main():
     global node
     if not os.path.exists(CONFIG_FILE):
@@ -197,10 +231,21 @@ def main():
         if not node.set_configs(mine, cons, peers):
             print("[from: node]: Bad configuration file parameters!")
             return False
+        node.start_node()
     except json.decoder.JSONDecodeError:
         print_bad_config()
         return False
-    app.run(host=host, port=port, threaded=True)
+
+    server_thread = ServerThread(1, "Server Thread", 1, host=host, port=port)
+    mining_thread = MiningThread(2, "Mining Thread", 2)
+
+    server_thread.start()
+    # time.sleep(2) #wating for genesis block
+    mining_thread.start()
+
+    mining_thread.join()
+    server_thread.join()
+
 
 
 if __name__ == '__main__':

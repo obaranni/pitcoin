@@ -27,32 +27,51 @@ class Blockchain:
         self.challenge = True
         self.difficulty = BASE_COMPLEXITY
         self.reward = BASE_REWARD
-        self.load_chain()
+
+    def set_peers(self, peers):
+        print("[from: node]: Saving trusted peers...")
+        file = open(PEERS_FILE, 'w+')
+        one_line_peers = ''
+        for peer in peers:
+            one_line_peers += peer + '\n'
+        file.write("%s" % one_line_peers)
+        file.close()
 
     def set_configs(self, mine, consensus, peers):
         try:
-            print("[from: node]: Configuring a node from a configuration file...")
+            print("\n[from: node]: Configuring a node from a configuration file...")
+            self.set_peers(peers)
             if mine == "on":
                 self.mine_mode = True
             if consensus == "on":
                 self.consensus_mode = True
-            file = open(PEERS_FILE, 'w+')
-            one_line_peers = ''
-            for peer in peers:
-                one_line_peers += peer + '\n'
-            file.write("%s" % one_line_peers)
-            file.close()
-            print("[from: node]: Configuring done. Current blockchain height:", self.get_chain_length(), end="\n\n")
+            print("[from: node]: Configuring done", end="\n")
         except:
             print("[from: node]: Configuring failed!\n")
             return False
         return True
 
+    def start_node(self):
+        print("\n[from: node]: Node started successfully")
+        blocks = self.load_last_block_from_db(BLOCKCHAIN_DB)
+        print("[from: node]: Loading blocks from database...")
+        if blocks is None:
+            print("[from: node]: Database is empty")
+            self.create_chain()
+        else:
+            self.blocks = [blocks]
+            print("[from: node]: Done")
+            print("[from: node]: Chain height:", self.get_chain_length())
+        print("[from: node]: Transactions in pool:", TxPool().get_pool_size())
+        if self.consensus_mode:
+            self.connect_with_peers(get_chain=True)
+        else:
+            print()
+
     def change_mine_mode(self):
         self.mine_mode = not self.mine_mode
         if self.mine_mode:
             print("[from: node]: Mining mode: on")
-            self.start_mining()
         else:
             print("[from: node]: Mining mode: off")
 
@@ -101,7 +120,7 @@ class Blockchain:
         pool_size = tx_pool.get_pool_size()
         if pool_size < TRANSACTIONS_TO_MINE:
             return False
-        print("[from: node]: Txs in pool: %d. Start mining" % pool_size)
+        print("[from: node]: Txs in pool: %d" % pool_size)
         txs = tx_pool.get_last_txs(MAX_TX_TO_GET)
         valid_txs = []
         utxo = self.get_utxo("address")
@@ -139,35 +158,33 @@ class Blockchain:
             except:
                 pass
         if connections:
-            print("[from: node]: Report completed\n")
+            print("[from: node]: Report completed")
         else:
-            print("[from: node]: No connection with nodes\n")
+            print("[from: node]: No connection with nodes")
 
     def mining_hash(self, block, complexity=BASE_COMPLEXITY):
-        print("[from: node]: Mining with difficulty", complexity)
+        print("\n[from: node]: Mining with difficulty", complexity)
         while block.hash[:complexity] != "0" * complexity:
             if not self.challenge:
+                print("[from: node]: Terminating of the mining process")
                 return None
             block.nonce += 1
             block.calculate_hash()
         return block
 
     def start_mining(self):
-        if len(self.blocks) < 1:
-            self.create_chain()
         self.challenge = True
-        while self.challenge:
-            txs = self.cut_transactions()
-            if not txs:
-                res = self.create_block(None)
-            else:
-                res = self.create_block(txs[:TRANSACTIONS_TO_MINE])
-            if not res:
-                self.challenge = True
-                return False
-            print("[from: node]: Mining is over. Current blockchain height:", self.get_chain_length())
-            self.connect_with_peers(get_chain=False)
-        self.challenge = True
+        while True:
+            if self.mine_mode and self.challenge:
+                txs = self.cut_transactions()
+                if not txs:
+                    res = self.create_block(None)
+                else:
+                    res = self.create_block(txs[:TRANSACTIONS_TO_MINE])
+                if res is None:
+                    continue
+                print("[from: node]: Mining is over. Current blockchain height:", self.get_chain_length())
+                self.connect_with_peers(get_chain=False)
 
     def create_utxo_if_not_exit(self, utxo_file_path=UTXO_FILE):
         utxo_file = open(utxo_file_path, "a+")
@@ -227,7 +244,7 @@ class Blockchain:
             return utxos_dict
 
     def create_chain(self):
-        print("[from: node]: Creating genesis block")
+        print("[from: node]: Creating genesis block", end="")
         txs = None
         block = self.mining_hash(self.genesis_block(txs))
         self.save_block(block, BLOCKCHAIN_DB)
@@ -270,6 +287,7 @@ class Blockchain:
             old_blocks = open(BLOCKCHAIN_DB, 'a')
             old_blocks.writelines(new_blocks_lines)
             old_blocks.close()
+            os.remove(TMP_BLOCKCHAIN_DB)
         else:
             os.remove(BLOCKCHAIN_DB)
             os.rename(TMP_BLOCKCHAIN_DB, BLOCKCHAIN_DB)
@@ -304,6 +322,11 @@ class Blockchain:
 
     def fetch_best_chain(self, peer):
         try:
+            if os.path.isfile(TMP_UTXO_FILE):
+                os.remove(TMP_UTXO_FILE)
+            if os.path.isfile(TMP_BLOCKCHAIN_DB):
+                os.remove(TMP_BLOCKCHAIN_DB)
+
             i = self.do_i_need_all_chain(peer)
             append = i
             self.blocks = []
@@ -355,10 +378,10 @@ class Blockchain:
             except requests.exceptions.ConnectionError:
                 lengths.append(-1)
                 print("  Failed! Connection error!")
-
             i += 1
         if connections:
             best_index = self.lookfor_best_chain(lengths)
+            print("Other len %d      my  %d", lengths[best_index], self.get_chain_length())
             if int(lengths[best_index]) > self.get_chain_length():
                 print("[from: node]: Fetching chain from peer...")
                 self.consensus_mode = False
@@ -379,23 +402,7 @@ class Blockchain:
 
     def get_new_block_alert(self):
         self.connect_with_peers(get_chain=True)
-        if self.mine_mode:
-            self.start_mining()
-
-    def load_chain(self):
-        print("\n[from: node]: Node started successfully")
-        blocks = self.load_last_block_from_db(BLOCKCHAIN_DB)
-        print("[from: node]: Loading blocks from database...")
-        if blocks is None:
-            print("[from: node]: Database is empty")
-            self.create_chain()
-        else:
-            self.blocks = [blocks]
-            print("[from: node]: Done")
-            print("[from: node]: Chain height:", self.get_chain_length())
-        print("[from: node]: Transactions in pool:", TxPool().get_pool_size(), end="\n\n")
-        if self.consensus_mode:
-            self.connect_with_peers(get_chain=True)
+        self.challenge = True
 
     def change_consensus_mode(self):
         self.consensus_mode = not self.consensus_mode
@@ -479,12 +486,13 @@ class Blockchain:
         return self.difficulty
 
     def calculate_difficulty(self, prev_time, new_time):
-        if new_time - prev_time < 1:
-            return self.difficulty + 1
-        elif new_time - prev_time > 1 and self.difficulty > BASE_COMPLEXITY:
-            return self.difficulty - 1
-        else:
-            return self.difficulty
+        return 4
+        # if new_time - prev_time < 1:
+        #     return self.difficulty + 1
+        # elif new_time - prev_time > 1 and self.difficulty > BASE_COMPLEXITY:
+        #     return self.difficulty - 1
+        # else:
+        #     return self.difficulty
 
     def create_block(self, txs):
         prev_hash = self.blocks[-1].hash
