@@ -59,7 +59,7 @@ def new_block():
     print("\n[from: node]: Someone mined a new block")
     node.challenge = False
     if node.consensus_mode:
-        node.connect_with_peers(get_chain=True)
+        node.get_new_block_alert()
     else:
         print("[from: node]: please run consensus mode to fetch bigger chain")
     return jsonify('Done')
@@ -200,7 +200,7 @@ def main():
     except json.decoder.JSONDecodeError:
         print_bad_config()
         return False
-    app.run(host=host, port=port)
+    app.run(host=host, port=port, threaded=True)
 
 
 if __name__ == '__main__':

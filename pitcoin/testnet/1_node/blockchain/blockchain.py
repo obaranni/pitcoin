@@ -24,18 +24,18 @@ class Blockchain:
         self.blocks = []
         self.mine_mode = False
         self.consensus_mode = False
-        self.load_chain()
         self.challenge = True
         self.difficulty = BASE_COMPLEXITY
         self.reward = BASE_REWARD
+        self.load_chain()
 
     def set_configs(self, mine, consensus, peers):
         try:
             print("[from: node]: Configuring a node from a configuration file...")
             if mine == "on":
-                self.change_mine_mode()
+                self.mine_mode = True
             if consensus == "on":
-                self.change_consensus_mode()
+                self.consensus_mode = True
             file = open(PEERS_FILE, 'w+')
             one_line_peers = ''
             for peer in peers:
@@ -119,12 +119,7 @@ class Blockchain:
         for i in utxo_flags:
             if i[1] == 0:
                 utxo_file.write("%s\n" % str(i[0]))
-
-
-
         txs_to_mine = valid_txs[:TRANSACTIONS_TO_MINE]
-
-
         tx_pool.set_txs(valid_txs[TRANSACTIONS_TO_MINE:])
         utxo_file.close()
         return txs_to_mine
@@ -135,7 +130,7 @@ class Blockchain:
         for peer in peers:
             try:
                 url = 'http://' + peer[:-1] + '/newblock'
-                requests.get(url=url)
+                requests.get(url=url,timeout=0.0000000001)
                 connections = 1
             except requests.exceptions.InvalidURL:
                 pass
@@ -151,20 +146,15 @@ class Blockchain:
     def start_mining(self):
         if len(self.blocks) < 1:
             self.create_chain()
-        flag = 0
         self.challenge = True
-        while True:
+        while self.challenge:
             txs = self.cut_transactions()
             if not txs:
-                if flag:
-                    break
-                return False
+                self.create_block(None)
             else:
-                flag = 1
-            if not self.create_block(txs[:TRANSACTIONS_TO_MINE]):
-                break
-        print("[from: node]: Mining is over. Current blockchain height:", self.get_chain_length())
-        self.connect_with_peers(get_chain=False)
+                self.create_block(txs[:TRANSACTIONS_TO_MINE])
+            print("[from: node]: Mining is over. Current blockchain height:", self.get_chain_length())
+            self.connect_with_peers(get_chain=False)
         self.challenge = True
 
     def create_utxo_if_not_exit(self, utxo_file_path=UTXO_FILE):
@@ -359,7 +349,9 @@ class Blockchain:
             best_index = self.lookfor_best_chain(lengths)
             if int(lengths[best_index]) > self.get_chain_length():
                 print("[from: node]: Fetching chain from peer...")
+                self.consensus_mode = False
                 self.fetch_best_chain(peers[best_index])
+                self.consensus_mode = True
                 return True
         print("[from: node]: There is no better chain. Using own chain")
 
@@ -373,22 +365,25 @@ class Blockchain:
             self.send_new_block_alert(peers)
         file.close()
 
+    def get_new_block_alert(self):
+        self.connect_with_peers(get_chain=True)
+        if self.mine_mode:
+            self.start_mining()
+
     def load_chain(self):
         print("\n[from: node]: Node started successfully")
         blocks = self.load_last_block_from_db(BLOCKCHAIN_DB)
         print("[from: node]: Loading blocks from database...")
         if blocks is None:
             print("[from: node]: Database is empty")
+            self.create_chain()
         else:
             self.blocks = [blocks]
             print("[from: node]: Done")
             print("[from: node]: Chain height:", self.get_chain_length())
         print("[from: node]: Transactions in pool:", TxPool().get_pool_size(), end="\n\n")
-
         if self.consensus_mode:
             self.connect_with_peers(get_chain=True)
-        if self.mine_mode:
-            self.create_chain()
 
     def change_consensus_mode(self):
         self.consensus_mode = not self.consensus_mode
@@ -419,7 +414,6 @@ class Blockchain:
             block, block_json = self.get_block_by_id(block_count, db_file)
             if not block:
                 break
-
 
 
             old_utxo = self.get_utxo("address", utxo_file_path)
@@ -482,9 +476,9 @@ class Blockchain:
         return self.difficulty
 
     def calculate_difficulty(self, prev_time, new_time):
-        if new_time - prev_time < 15:
+        if new_time - prev_time < 1:
             return self.difficulty + 1
-        elif new_time - prev_time > 15 and self.difficulty > BASE_COMPLEXITY:
+        elif new_time - prev_time > 1 and self.difficulty > BASE_COMPLEXITY:
             return self.difficulty - 1
         else:
             return self.difficulty
@@ -521,8 +515,6 @@ class Blockchain:
             return False
         pool_size = tx_pool.get_pool_size()
         print("[from: node]: New tx! Current pool size:", pool_size)
-        if self.mine_mode:
-            self.start_mining()
         return result
 
     def get_pending_txs(self):
