@@ -596,3 +596,10 @@ class Blockchain:
         if self.consensus_mode:
             self.connect_with_peers(get_chain=True)
         return True
+
+    def get_block_txs(self, block_id):
+        block, block_json = self.get_block_by_id(block_id)
+        print(block_json)
+        for i in block.transactions:
+            print(i)
+        return block.transactions

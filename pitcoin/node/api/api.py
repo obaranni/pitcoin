@@ -3,6 +3,7 @@ import sys, os, json
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain'))
 from blockchain import Blockchain
 import logging, threading, time
+from flask_cors import CORS
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 # Create the application instance
@@ -10,6 +11,7 @@ app = Flask(__name__)
 app.config['DEBUG'] = False
 
 
+CORS(app)
 
 # node = None
 
@@ -122,10 +124,11 @@ def get_block():
         if height is None or not height.isdigit() or int(height) < 1:
             return jsonify({'block': 'None', 'error:':'block height should be a positive number above zero, '
                                                       '\"/block?height=28\"'})
+        print("someone want block", height)
         block, block_str = node.get_block_by_id(int(height) - 1)
         if not block:
             return jsonify({'block': 'None', 'error': 'Block doesn\'t exist'})
-        return jsonify({'block': block_str})
+        return jsonify({'block': block_str}), 200
 
 
 @app.route('/balance', methods=['GET'])
@@ -153,6 +156,27 @@ def get_pending_transactions():
         return jsonify("Transaction pull i empty")
     return txs
 
+
+@app.route('/block/txs', methods=['GET'])
+def get_block_txs():
+    global node
+    try:
+        id = request.args.get('id')
+        block_txs = node.get_block_txs_ids(id)
+    except:
+        return jsonify("Bad block id")
+    return block_txs
+
+@app.route('/block/txs/deser', methods=['GET'])
+def get_deser_tx():
+    global node
+    try:
+        tx_id = request.args.get('tx_id')
+        print("[from: node]: look for:", tx_id)
+        deser_tx = node.get_deser_tx_by_id(tx_id)
+    except:
+        return jsonify("Bad block id")
+    return deser_tx
 
 @app.route('/transaction/new', methods=['POST', 'HTTP'])
 def set_new_transaction():
