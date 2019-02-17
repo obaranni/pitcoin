@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Pitcoin Explorer</title>
+    <link rel="stylesheet" type="text/css" href="./files/default.css">
+    <link rel="stylesheet" type="text/css" href="./files/font.css">
+    <link rel="stylesheet" type="text/css" href="./files/tooltipster.bundle.min.css">
+    <link rel="stylesheet" type="text/css" href="./files/common.css">
+    <link rel="stylesheet" type="text/css" href="./files/mobile.css">
+	<script src="ex.js" async="" defer=""></script>
+</head>
+<body>
+<div id="skipNaviWrap">
+     <p class="hidden">1</p>
+     <a href="#">2</a>
+     <a href="#">3</a>
+     <a href="#">4</a>
+ </div>
+    
+<div id="wrap">
+
+<header id="header" class="header">
+	<input type="hidden" id="blockchainOwner" value="pitcoin">
+	<input type="hidden" id="feeRate" value="0.013%">
+	<div class="inr-c">
+		<h1 class="logo">
+			<a href="#">		
+			<img src="./files/logo.png" alt="">
+			</a>
+		</h1>
+		
+		<button type="button" class="btn_gnb"><span></span></button>
+		<nav class="gnbbox">        	
+<script type="text/javascript">
+	function search(){
+	    if($("#searchText").val() === ""){
+	        alert("Please enter a search value");
+	        $("#searchText").focus();
+	        return false;
+		}
+
+	    var params = {
+	        "searchText" : $("#searchText").val()
+		};
+        RequestUtil.movePage("SEARCH_TEXT",params);
+	}
+	function enter_check(){
+        if(event.keyCode == 13) {
+            search();
+        }
+	}
+</script>
+		<div class="box-sch">
+			<div class="box">
+				<input type="text" id="searchText" class="inp" onkeyup="javascript:enter_check()" placeholder="Block height or hash">
+				<button type="button" class="btn" onclick="search()"><span>검색</span></button>
+			</div>
+		</div>
+        
+			<ul id="gnb" class="gnb">
+				<li class="g1 "><a href="#"><span>BLOCKS</span></a></li>
+				<li class="g2 "><a href="#"><span>PEERS</span></a></li>
+				<li class="g3 "><a href="#"><span>NODES</span></a></li>
+				<li class="g4 ">
+					<a href="#"><span>WALLET</span></a>
+				</li>
+			</ul>
+		</nav>
+	</div>
+	
+	<button type="button" class="btn-top"><img src="./files/go-top.png" alt="123"></button>
+</header>
+
+
+
+    <div id="container" class="container wrap_main">
+        <section class="contents inr-c">
+        	<div class="main_visual">
+        		<h2 class="title"><span>Pitcoin</span> Blocks Explorer </h2>
+        		<p>
+						Pitcoin is the coolest implementation of a Bitcoin node on python.
+					<br><span>be cool with us</span>, become <u><a href="https://github.com/obaranni/pitcoin">part of the network</a></u>
+				</p>
+        	</div>
+            <div class="main_block box-group">
+                <ul>
+                    <li class="b1">
+                    	<span class="h">BLOCKS</span>
+                        <p class="t"><strong>loading...</strong></p>
+                    </li>
+                    <li class="b2">
+                    	<span class="h">PEERS</span>
+                    	<p class="t"><strong>1</strong></p>
+                    </li>
+                </ul>
+            </div>
+
+
+
+
+
+
+
+
+
+			<div class="area_lst_blocks box-group" id="transaction_box">
+					<div class="box_block box-group2">
+						<div class="top">
+							<div class="lft">
+								<button type="button" class="btn-pk s violet v-detail"><span>Detail</span></button>
+								<a href="#" class="link">c6186ae5a82a78ffc084292014268546082e762f58f472d6c3837f1204226364</a>
+							</div>
+							<div class="rgh">
+								<p class="t1">2019-02-17 22:57:57</p>
+							</div>
+						</div>
+						<div class="cen">
+							<div class="lft">
+								<div class="area">
+												<div class="bbox">
+													<div class="b1">
+														<div class="t"><p>1.00000000 PTC</p></div>
+														<div class="h">
+																	<a href="/transaction/e9f100570ff78e1402246a71553217f98dc7d8eafa72259eaaf1a25c2ebdcfd1" class="ico_detail"><span></span></a>
+																	<a href="/address/whBCdmiSyMvzLhPcstRhRUtTGAKZVvrffJ">whBCdmiSyMvzLhPcstRhRUtTGAKZVvrffJ</a>
+														</div>
+													</div>
+													<div class="b2">
+														<p>
+															<span>scriptSig</span>
+															<span class="db">3045022100cad00114702b0fbfc1baad7af209d405ed3efedda9bbd7650045f2738b9c819002205ea9ef7d60b93b50e28ee7e8621dea1e7b62a7a56e44cc4c11ec3a1d6a3c225a[ALL|FORKID] 039ce7a0df9722a6f4f0528cb00a0a3cd02c31a4d6a79bf9f9151afcb1b4c06ec5</span>
+															<span class="db"></span>
+														</p>
+													</div>
+												</div>
+												<div class="bbox">
+													<div class="b1">
+														<div class="t"><p>0.83984000 PTC</p></div>
+														<div class="h">			
+																	<a href="/transaction/e9f100570ff78e1402246a71553217f98dc7d8eafa72259eaaf1a25c2ebdcfd1" class="ico_detail"><span></span></a>
+																	<a href="/address/wWa3KQank7L3UxBB76ErS4dS2QmVG4PqWY">wWa3KQank7L3UxBB76ErS4dS2QmVG4PqWY</a>
+														</div>
+													</div>
+													<div class="b2">
+														<p>
+															<span>scriptSig</span>
+															<span class="db">304402203e6d343523b1ec437b2873f19604cad79003e85d805619705ade17a2bad14ffb02206e30a7c1801b3b6ec8a7e77ee23674741c1d5fbe4994fd8dba3b86af2853e651[ALL|FORKID] 030a339d2d2df66772279a7c8d571e48a521c967054191bb2c8410f593a1f5c907</span>
+															<span class="db"></span>
+														</p>
+													</div>
+												</div>
+								</div>
+								<div class="btns">
+									<button type="button" class="btn-pk gray w100p v-more"><span>Show more</span></button>
+								</div>
+							</div>
+							<div class="rgh">
+								<div class="area">
+												<div class="bbox">
+													<div class="b1">
+														<div class="t">
+																	<a href="/transaction/8065f5cdfa87627a3ec7474414f32ba453eca825f37a0bdd4f9b3cf14b837ff5" class="ico_detail"><span></span></a>
+															<p>1.00000000 PTC</p>
+														</div>
+														<div class="h">
+																	<a href="/address/wXNZkUvUtMEv3cqJDTMTVtWKAp7hQRtZGE">wXNZkUvUtMEv3cqJDTMTVtWKAp7hQRtZGE</a>
+														</div>
+													</div>
+													<div class="b2">
+														<p><span>Type</span>pubkeyhash</p>
+														<p><span>scriptPubKey</span><span class="db">OP_DUP OP_HASH160 80d1cd32eab1113d5a732ed06a7cc37ebbb8c381 OP_EQUALVERIFY OP_CHECKSIG</span></p>
+													</div>
+												</div>
+												<div class="bbox">
+													<div class="b1">
+														<div class="t">
+																	<a href="/transaction/8065f5cdfa87627a3ec7474414f32ba453eca825f37a0bdd4f9b3cf14b837ff5" class="ico_detail"><span></span></a>
+															<p>0.83971000 PTC</p>
+														</div>
+														<div class="h">
+																	<a href="/address/wTdnbJopgVzEdr4CUZS3SavvBiLPbdFj7g">wTdnbJopgVzEdr4CUZS3SavvBiLPbdFj7g</a>
+														</div>
+													</div>
+													<div class="b2">
+														<p><span>Type</span>pubkeyhash</p>
+														<p><span>scriptPubKey</span><span class="db">OP_DUP OP_HASH160 57d241f624363a9aaae4e2c7862dee5e0eaae4a6 OP_EQUALVERIFY OP_CHECKSIG</span></p>
+													</div>
+												</div>
+								</div>
+								<div class="btns">
+									<button type="button" class="btn-pk gray w100p v-more"><span>Show more</span></button>
+								</div>
+							</div>
+						</div>
+						<div class="botm">
+							<div class="lft">
+								<p class="b-txt gray">Fee <button type="button" class="tip_fee"></button>:
+									<span class="cl-ty2"></span> 0.00000000 PTC
+								</p>
+							</div>
+							<div class="rgh">
+								<p class="b-txt violet">1.83971000 PTC</p>
+							</div>
+						</div>
+					</div>
+			</div>
+
+
+
+
+
+
+
+
+
+
+
+            <div class="main_right">
+				<div class="tbl_style1 box-group">
+					<h2 class="htitle2">TRANSACTIONS</h2>
+					<div class="tbl_basic list mtbl_main">
+					</div>
+				</div>
+				<div class="tbl_style1 box-group">
+						<section class="area_blocks_detail">
+						<div class="tit">
+							<h2 class="htitle2">BLOCK NUMBER<span class="c-black">#<em id="currentBlocknumber">loading...</em></span></h2>
+							<div class="right">
+								<p>
+									<span>Previous Block  :</span>
+									<button type="button" class="txt btn_prev">
+												<span><em id="prevBlocknumber">-</em></span>
+									</button>
+								</p>
+								<p>
+									<span>Next Block  :</span>
+									<button type="button" class="txt btn_next">
+												<span><em id="nextBlocknumber">-</em></span>
+									</button>
+								</p>
+							</div>
+						</div>
+						<div class="info">
+							 <table>
+								 <caption>block</caption>
+								 <colgroup>
+									 <col class="tw1" />
+									 <col />
+								 </colgroup>
+								 <tbody id="txs_list">
+									<tr>
+										 <th scope="row">Block Hash</th>
+										 <td id="currentBlockHash">-</td>
+									</tr>
+									<tr>
+										 <th scope="row">Parent Block</th>
+										 <td id="prevBlockhash">-</td>
+									</tr>
+									<tr>
+										 <th scope="row">Date</th>
+										 <td id="date">-</td>
+									</tr>
+									<tr>
+										 <th scope="row">Size</th>
+										 <td id="size">-</td>
+									</tr>
+									<tr>
+										 <th scope="row">Transactions</th>
+										 <td id="transactions">-</td>
+									</tr>
+									<tr>
+										<th scope="row">List</th>
+										<td id="List">:</td>
+									</tr>
+								 </tbody>
+							 </table>
+						 </div>
+					</section>
+				</div>
+            	<div class="tbl_style1 box-group">
+            	    <h2 class="htitle2">LATEST BLOCKS <a href="#" class="v-more">view more</a></h2>
+            	    <div class="tbl_basic list mtbl_main">
+            	        <table class="let's" summary="123.">
+            	            <caption>table</caption>
+            	            <colgroup>
+            	                <col class="block">
+            	                <col class="hash">
+            	                <col class="size">
+            	                <col class="date">
+            	                <col class="txs">
+            	            </colgroup>
+            	            <thead>
+            	            <tr>
+            	                <th scope="col" class=" ta-c">Block#</th>
+            	                <th scope="col">Block Hash</th>
+            	                <th scope="col" class=" ta-c">Size</th>
+            	                <th scope="col">Date</th>
+            	                <th scope="col" class=" ta-c">Txs</th>
+            	            </tr>
+            	            </thead>
+            	            <tbody class="go Geronimo">            	            
+            	            </tbody>
+            	        </table>
+            	    </div>
+            	</div>
+            </div>
+        </section>
+	</div>
+	
+	
+<footer id="footer" class="footer inr-c">
+	<p class="copy">Pitcon Blocks Explorer Version : v0.0.2</p>
+</footer>
+</div>
+</body>
+</html>

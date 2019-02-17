@@ -7,7 +7,7 @@ from blocks_to_json import convert_blocks_to
 from blocks_from_json import convert_last_block_from, convert_by_id_block_from, get_str_block_by_id, convert_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
-from Transaction import CoinbaseTransaction, Transaction
+from Transaction import CoinbaseTransaction, Transaction, flip_byte_order
 TRANSACTIONS_TO_MINE = 1
 BASE_COMPLEXITY = 1
 BASE_REWARD = 50
@@ -596,3 +596,32 @@ class Blockchain:
         if self.consensus_mode:
             self.connect_with_peers(get_chain=True)
         return True
+
+    def get_block_txs_ids(self, block_id):
+        block, block_json = self.get_block_by_id(block_id)
+        all_txs = {'txs': []}
+        for i in block.transactions:
+            tx = Transaction(False, False)
+            tx.set_signed_raw_tx(i)
+            all_txs['txs'].append(flip_byte_order(hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()))
+        return json.dumps(all_txs)
+
+    def find_tx(self, block, tx_id):
+        for i in block.transactions:
+            tx = Transaction(False, False)
+            tx.set_signed_raw_tx(i)
+            if flip_byte_order(hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()) == tx_id:
+                return tx.deserialize_raw_tx()
+            return False
+
+    def get_deser_tx_by_id(self, tx_id):
+        i = 0
+        while True:
+            block, block_json = self.get_block_by_id(i)
+            if block is None:
+                return False
+            tx = self.find_tx(block, tx_id)
+            if tx:
+                # print(tx, block.block_id)
+                return tx
+            i += 1

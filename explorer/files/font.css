@@ -1,0 +1,111 @@
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-weight: 100;
+    font-style:normal;
+    src: url('font/NotoSans-Thin.eot');
+    src:url('font/NotoSans-Thin.eot?#iefix') format('embedded-opentype'),
+    url('font/NotoSans-Thin.woff2') format('woff2'),
+    url('font/NotoSans-Thin.woff') format('woff'),
+    url('font/NotoSans-Thin.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-weight: 300;
+    font-style:normal;
+    src: url('font/NotoSans-Regular.eot');
+    src:url('font/NotoSans-Regular.eot?#iefix') format('embedded-opentype'),
+    url('font/NotoSans-Regular.woff2') format('woff2'),
+    url('font/NotoSans-Regular.woff') format('woff'),
+    url('font/NotoSans-Regular.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 400;
+    src: url('font/NotoSans-Regular.eot');
+    src:url('font/NotoSans-Regular.eot?#iefix') format('embedded-opentype'),
+    url('font/NotoSans-Regular.woff2') format('woff2'),
+    url('font/NotoSans-Regular.woff') format('woff'),
+    url('font/NotoSans-Regular.otf') format('opentype');
+}
+
+
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-weight: 500;
+    font-style:normal;
+    src: url('font/NotoSans-Medium.eot');
+    src:url('font/NotoSans-Medium.eot?#iefix') format('embedded-opentype'),
+    url('font/NotoSans-Medium.woff2') format('woff2'),
+    url('font/NotoSans-Medium.woff') format('woff'),
+    url('font/NotoSans-Medium.otf') format('opentype');
+}
+
+
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style:normal;
+    font-weight: bold;
+    font-weight: 700;
+    src: url('font/NotoSans-Bold.eot');
+    src:url('font/NotoSans-Bold.eot?#iefix') format('embedded-opentype'),
+    url('font/NotoSans-Bold.woff2') format('woff2'),
+    url('font/NotoSans-Bold.woff') format('woff'),
+    url('font/NotoSans-Bold.otf') format('opentype');
+}
+
+
+/* exo-300 - latin */
+@font-face {
+    font-family: 'Exo 2';
+    font-style: normal;
+    font-weight: 300;
+    src: url('font/exo-v7-latin-300.eot'); /* IE9 Compat Modes */
+    src: local('Exo Light'), local('Exo-Light'),
+    url('font/exo-v7-latin-300.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('font/exo-v7-latin-300.woff2') format('woff2'), /* Super Modern Browsers */
+    url('font/exo-v7-latin-300.woff') format('woff'), /* Modern Browsers */
+    url('font/exo-v7-latin-300.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('font/exo-v7-latin-300.svg#Exo') format('svg'); /* Legacy iOS */
+}
+/* exo-regular - latin */
+@font-face {
+    font-family: 'Exo 2';
+    font-style: normal;
+    font-weight: 400;
+    src: url('font/exo-v7-latin-regular.eot'); /* IE9 Compat Modes */
+    src: local('Exo Regular'), local('Exo-Regular'),
+    url('font/exo-v7-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('font/exo-v7-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('font/exo-v7-latin-regular.woff') format('woff'), /* Modern Browsers */
+    url('font/exo-v7-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('font/exo-v7-latin-regular.svg#Exo') format('svg'); /* Legacy iOS */
+}
+/* exo-700 - latin */
+@font-face {
+    font-family: 'Exo 2';
+    font-style: normal;
+    font-weight: 700;
+    src: url('font/exo-v7-latin-700.eot'); /* IE9 Compat Modes */
+    src: local('Exo Bold'), local('Exo-Bold'),
+    url('font/exo-v7-latin-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('font/exo-v7-latin-700.woff2') format('woff2'), /* Super Modern Browsers */
+    url('font/exo-v7-latin-700.woff') format('woff'), /* Modern Browsers */
+    url('font/exo-v7-latin-700.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('font/exo-v7-latin-700.svg#Exo') format('svg'); /* Legacy iOS */
+}
+/* exo-800 - latin */
+@font-face {
+    font-family: 'Exo 2';
+    font-style: normal;
+    font-weight: 800;
+    src: url('font/exo-v7-latin-800.eot'); /* IE9 Compat Modes */
+    src: local('Exo ExtraBold'), local('Exo-ExtraBold'),
+    url('font/exo-v7-latin-800.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('font/exo-v7-latin-800.woff2') format('woff2'), /* Super Modern Browsers */
+    url('font/exo-v7-latin-800.woff') format('woff'), /* Modern Browsers */
+    url('font/exo-v7-latin-800.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('font/exo-v7-latin-800.svg#Exo') format('svg'); /* Legacy iOS */
+}
