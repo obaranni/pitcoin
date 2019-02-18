@@ -11,6 +11,7 @@ from Transaction import CoinbaseTransaction, Transaction, flip_byte_order
 TRANSACTIONS_TO_MINE = 1
 BASE_COMPLEXITY = 1
 BASE_REWARD = 50
+BLOCK_TIME = 3
 MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
 TMP_BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'tmp_blocks')
@@ -486,13 +487,12 @@ class Blockchain:
         return self.difficulty
 
     def calculate_difficulty(self, prev_time, new_time):
-        return 4
-        # if new_time - prev_time < 1:
-        #     return self.difficulty + 1
-        # elif new_time - prev_time > 1 and self.difficulty > BASE_COMPLEXITY:
-        #     return self.difficulty - 1
-        # else:
-        #     return self.difficulty
+        if new_time - prev_time < BLOCK_TIME:
+            return self.difficulty + 1
+        elif new_time - prev_time > BLOCK_TIME and self.difficulty > BASE_COMPLEXITY:
+            return self.difficulty - 1
+        else:
+            return self.difficulty
 
     def create_block(self, txs):
         prev_hash = self.blocks[-1].hash
@@ -604,6 +604,7 @@ class Blockchain:
             tx = Transaction(False, False)
             tx.set_signed_raw_tx(i)
             all_txs['txs'].append(flip_byte_order(hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()))
+            print("all", all_txs)
         return json.dumps(all_txs)
 
     def find_tx(self, block, tx_id):
@@ -612,16 +613,22 @@ class Blockchain:
             tx.set_signed_raw_tx(i)
             if flip_byte_order(hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()) == tx_id:
                 return tx.deserialize_raw_tx()
-            return False
+        return False
 
     def get_deser_tx_by_id(self, tx_id):
         i = 0
         while True:
             block, block_json = self.get_block_by_id(i)
-            if block is None:
+            # print(block)
+            if block is False:
                 return False
             tx = self.find_tx(block, tx_id)
             if tx:
-                # print(tx, block.block_id)
+                # print(tx, type(tx))
+                tx = json.loads(tx)
+                tx['block_id'] = block.block_id
+                for i in tx['inputs']:
+                    i['prev_tx_id'] = flip_byte_order(i['prev_tx_id'])
+                tx = json.dumps(tx)
                 return tx
             i += 1

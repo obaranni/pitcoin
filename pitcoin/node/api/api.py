@@ -124,7 +124,7 @@ def get_block():
         if height is None or not height.isdigit() or int(height) < 1:
             return jsonify({'block': 'None', 'error:':'block height should be a positive number above zero, '
                                                       '\"/block?height=28\"'})
-        print("someone want block", height)
+        # print("someone want block", height)
         block, block_str = node.get_block_by_id(int(height) - 1)
         if not block:
             return jsonify({'block': 'None', 'error': 'Block doesn\'t exist'})
@@ -172,10 +172,13 @@ def get_deser_tx():
     global node
     try:
         tx_id = request.args.get('tx_id')
-        print("[from: node]: look for:", tx_id)
+        # print("[from: node]: look for:", tx_id)
         deser_tx = node.get_deser_tx_by_id(tx_id)
+        if not deser_tx:
+            raise Exception
+
     except:
-        return jsonify("Bad block id")
+        return jsonify("Bad tx id")
     return deser_tx
 
 @app.route('/transaction/new', methods=['POST', 'HTTP'])
