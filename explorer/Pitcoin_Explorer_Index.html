@@ -107,84 +107,24 @@
 						<div class="top">
 							<div class="lft">
 								<button type="button" class="btn-pk s violet v-detail"><span>Detail</span></button>
-								<a href="#" class="link">c6186ae5a82a78ffc084292014268546082e762f58f472d6c3837f1204226364</a>
+								<a href="#" class="link" id="tx_link"></a>
 							</div>
 							<div class="rgh">
-								<p class="t1">2019-02-17 22:57:57</p>
+								<p class="t1" id="tx_data"></p>
 							</div>
 						</div>
 						<div class="cen">
 							<div class="lft">
-								<div class="area">
-												<div class="bbox">
-													<div class="b1">
-														<div class="t"><p>1.00000000 PTC</p></div>
-														<div class="h">
-																	<a href="/transaction/e9f100570ff78e1402246a71553217f98dc7d8eafa72259eaaf1a25c2ebdcfd1" class="ico_detail"><span></span></a>
-																	<a href="/address/whBCdmiSyMvzLhPcstRhRUtTGAKZVvrffJ">whBCdmiSyMvzLhPcstRhRUtTGAKZVvrffJ</a>
-														</div>
-													</div>
-													<div class="b2">
-														<p>
-															<span>scriptSig</span>
-															<span class="db">3045022100cad00114702b0fbfc1baad7af209d405ed3efedda9bbd7650045f2738b9c819002205ea9ef7d60b93b50e28ee7e8621dea1e7b62a7a56e44cc4c11ec3a1d6a3c225a[ALL|FORKID] 039ce7a0df9722a6f4f0528cb00a0a3cd02c31a4d6a79bf9f9151afcb1b4c06ec5</span>
-															<span class="db"></span>
-														</p>
-													</div>
-												</div>
-												<div class="bbox">
-													<div class="b1">
-														<div class="t"><p>0.83984000 PTC</p></div>
-														<div class="h">			
-																	<a href="/transaction/e9f100570ff78e1402246a71553217f98dc7d8eafa72259eaaf1a25c2ebdcfd1" class="ico_detail"><span></span></a>
-																	<a href="/address/wWa3KQank7L3UxBB76ErS4dS2QmVG4PqWY">wWa3KQank7L3UxBB76ErS4dS2QmVG4PqWY</a>
-														</div>
-													</div>
-													<div class="b2">
-														<p>
-															<span>scriptSig</span>
-															<span class="db">304402203e6d343523b1ec437b2873f19604cad79003e85d805619705ade17a2bad14ffb02206e30a7c1801b3b6ec8a7e77ee23674741c1d5fbe4994fd8dba3b86af2853e651[ALL|FORKID] 030a339d2d2df66772279a7c8d571e48a521c967054191bb2c8410f593a1f5c907</span>
-															<span class="db"></span>
-														</p>
-													</div>
-												</div>
+								<div class="area" id="area-1">
+										<!-- Inputs -->
 								</div>
 								<div class="btns">
 									<button type="button" class="btn-pk gray w100p v-more"><span>Show more</span></button>
 								</div>
 							</div>
 							<div class="rgh">
-								<div class="area">
-												<div class="bbox">
-													<div class="b1">
-														<div class="t">
-																	<a href="/transaction/8065f5cdfa87627a3ec7474414f32ba453eca825f37a0bdd4f9b3cf14b837ff5" class="ico_detail"><span></span></a>
-															<p>1.00000000 PTC</p>
-														</div>
-														<div class="h">
-																	<a href="/address/wXNZkUvUtMEv3cqJDTMTVtWKAp7hQRtZGE">wXNZkUvUtMEv3cqJDTMTVtWKAp7hQRtZGE</a>
-														</div>
-													</div>
-													<div class="b2">
-														<p><span>Type</span>pubkeyhash</p>
-														<p><span>scriptPubKey</span><span class="db">OP_DUP OP_HASH160 80d1cd32eab1113d5a732ed06a7cc37ebbb8c381 OP_EQUALVERIFY OP_CHECKSIG</span></p>
-													</div>
-												</div>
-												<div class="bbox">
-													<div class="b1">
-														<div class="t">
-																	<a href="/transaction/8065f5cdfa87627a3ec7474414f32ba453eca825f37a0bdd4f9b3cf14b837ff5" class="ico_detail"><span></span></a>
-															<p>0.83971000 PTC</p>
-														</div>
-														<div class="h">
-																	<a href="/address/wTdnbJopgVzEdr4CUZS3SavvBiLPbdFj7g">wTdnbJopgVzEdr4CUZS3SavvBiLPbdFj7g</a>
-														</div>
-													</div>
-													<div class="b2">
-														<p><span>Type</span>pubkeyhash</p>
-														<p><span>scriptPubKey</span><span class="db">OP_DUP OP_HASH160 57d241f624363a9aaae4e2c7862dee5e0eaae4a6 OP_EQUALVERIFY OP_CHECKSIG</span></p>
-													</div>
-												</div>
+								<div class="area" id="area-2">
+										<!-- Outputs -->
 								</div>
 								<div class="btns">
 									<button type="button" class="btn-pk gray w100p v-more"><span>Show more</span></button>
@@ -198,7 +138,7 @@
 								</p>
 							</div>
 							<div class="rgh">
-								<p class="b-txt violet">1.83971000 PTC</p>
+								<p class="b-txt violet", id="amount">1.83971000 PTC</p>
 							</div>
 						</div>
 					</div>
