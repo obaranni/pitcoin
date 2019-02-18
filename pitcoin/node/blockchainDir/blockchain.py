@@ -1,5 +1,5 @@
 import sys, os, datetime, json, requests, base58, hashlib, codecs
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain', 'tools'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchainDir', 'tools'))
 from pending_pool import TxPool
 from wallet import wifKeyToPrivateKey, fullSettlementPublicAddress, readKeyFromFile, signMessage, getAddresOfPublicKey
 from serialized_txs_to_json import txs_to_json
@@ -7,10 +7,11 @@ from blocks_to_json import convert_blocks_to
 from blocks_from_json import convert_last_block_from, convert_by_id_block_from, get_str_block_by_id, convert_block_from
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'classes'))
 from block import Block
-from Transaction import CoinbaseTransaction, Transaction
+from Transaction import CoinbaseTransaction, Transaction, flip_byte_order
 TRANSACTIONS_TO_MINE = 1
 BASE_COMPLEXITY = 1
 BASE_REWARD = 50
+BLOCK_TIME = 3
 MAX_TX_TO_GET = 1000
 BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'blocks')
 TMP_BLOCKCHAIN_DB = os.path.join(os.path.dirname(__file__),  'storage', 'tmp_blocks')
@@ -181,7 +182,7 @@ class Blockchain:
                     res = self.create_block(None)
                 else:
                     res = self.create_block(txs[:TRANSACTIONS_TO_MINE])
-                if not res:
+                if res is None:
                     continue
                 print("[from: node]: Mining is over. Current blockchain height:", self.get_chain_length())
                 self.connect_with_peers(get_chain=False)
@@ -486,13 +487,12 @@ class Blockchain:
         return self.difficulty
 
     def calculate_difficulty(self, prev_time, new_time):
-        return 4
-        # if new_time - prev_time < 1:
-        #     return self.difficulty + 1
-        # elif new_time - prev_time > 1 and self.difficulty > BASE_COMPLEXITY:
-        #     return self.difficulty - 1
-        # else:
-        #     return self.difficulty
+        if new_time - prev_time < BLOCK_TIME:
+            return self.difficulty + 1
+        elif new_time - prev_time > BLOCK_TIME and self.difficulty > BASE_COMPLEXITY:
+            return self.difficulty - 1
+        else:
+            return self.difficulty
 
     def create_block(self, txs):
         prev_hash = self.blocks[-1].hash
@@ -596,3 +596,39 @@ class Blockchain:
         if self.consensus_mode:
             self.connect_with_peers(get_chain=True)
         return True
+
+    def get_block_txs_ids(self, block_id):
+        block, block_json = self.get_block_by_id(block_id)
+        all_txs = {'txs': []}
+        for i in block.transactions:
+            tx = Transaction(False, False)
+            tx.set_signed_raw_tx(i)
+            all_txs['txs'].append(flip_byte_order(hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()))
+            print("all", all_txs)
+        return json.dumps(all_txs)
+
+    def find_tx(self, block, tx_id):
+        for i in block.transactions:
+            tx = Transaction(False, False)
+            tx.set_signed_raw_tx(i)
+            if flip_byte_order(hashlib.sha256(hashlib.sha256(bytes.fromhex(i)).digest()).hexdigest()) == tx_id:
+                return tx.deserialize_raw_tx()
+        return False
+
+    def get_deser_tx_by_id(self, tx_id):
+        i = 0
+        while True:
+            block, block_json = self.get_block_by_id(i)
+            # print(block)
+            if block is False:
+                return False
+            tx = self.find_tx(block, tx_id)
+            if tx:
+                # print(tx, type(tx))
+                tx = json.loads(tx)
+                tx['block_id'] = block.block_id
+                for i in tx['inputs']:
+                    i['prev_tx_id'] = flip_byte_order(i['prev_tx_id'])
+                tx = json.dumps(tx)
+                return tx
+            i += 1

@@ -1,7 +1,7 @@
 from flask import  Flask, request, jsonify
 import sys, os, json
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'blockchain'))
-from blockchain import Blockchain
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from blockchainDir.blockchain import Blockchain
 import logging, threading, time
 from flask_cors import CORS
 log = logging.getLogger('werkzeug')
