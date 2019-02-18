@@ -68,7 +68,8 @@ function getDeserTx(tx_id){
       var text = xhr.responseText;
       deserTx = JSON.parse(text);
       console.log(deserTx)
-      openTransaction(deser_tx)
+      openBlock(deserTx['block_id'])
+      openTransaction(deserTx, tx_id)
     }
   };
   xhr.onerror = function() {
@@ -79,7 +80,6 @@ function getDeserTx(tx_id){
 
 function openBlock(id)
 {
-  // id -= 1;
   var json_str = localStorage.getItem('bb');
   var blocks = JSON.parse(json_str);
   block = blocks[id];
@@ -94,7 +94,6 @@ function openBlock(id)
   document.getElementById("date").innerHTML = timeConverter(block.timestamp)
   document.getElementById("size").innerHTML = JSON.stringify(block).length
   document.getElementById("transactions").innerHTML = block["transactions"].length
-
   getTxsIds(id)
 }
 
@@ -103,8 +102,51 @@ function selectBlock(id){
 }
 
 function openTransaction(deser_tx, tx_id){
-  console.log("asdfasdf", deser_tx, tx_id)
+  var json_str = localStorage.getItem('bb');
+  var blocks = JSON.parse(json_str);
+  block_time = timeConverter(blocks[deser_tx['block_id']]['timestamp']);
   
+  
+  document.querySelectorAll('.bbox').forEach(el => el.remove());
+
+
+  document.getElementById("tx_link").innerHTML = tx_id
+  document.getElementById("tx_data").innerHTML = block_time
+  
+  var bbox = document.createElement('div')
+  bbox.setAttribute('class', 'bbox')
+  var i = 1
+  while (i < deser_tx['inputs'].length + 1) {
+    prevTxId = deser_tx['inputs'][i - 1]['prev_tx_id'];
+    if (prevTxId === "0000000000000000000000000000000000000000000000000000000000000000"){
+      prevTxId = "Coinbase"
+      var html = '<a href="#">' + prevTxId + '</a></div></div>'
+    } else {
+      var html = '<a href="#" onclick="selectTx(\'' + prevTxId + '\')">'  + prevTxId + '</a></div></div>';
+    }
+
+    bbox.appendChild(createElementFromHTML('<div class="b1"><div class="h">' +
+	    '<a href="#" class="ico_detail"><span></span></a>' +
+	    html))
+    i += 1
+  }
+  document.getElementById('area-1').appendChild(bbox)
+
+
+  bbox = document.createElement('div')
+  bbox.setAttribute('class', 'bbox')
+  var i = 1
+  var sum = 0
+  while (i < deser_tx['outputs'].length + 1) {
+    bbox.appendChild(createElementFromHTML('<div class="b1"> <div class="t"><p>' + deser_tx['outputs'][i - 1]['value'] + ' PTC</p></div> <div class="h">' +
+	    '<a href="#" class="ico_detail"><span></span></a>' +
+      '<a href="#">' + deser_tx['outputs'][i - 1]['script'] + '</a></div></div>'))
+      sum += parseFloat(deser_tx['outputs'][i - 1]['value'])
+    i += 1
+  }
+  document.getElementById('area-2').appendChild(bbox)
+  document.getElementById('amount').innerHTML = sum
+
 }
 
 function selectTx(tx_id){
@@ -163,8 +205,6 @@ function fetchBlock(i, blocks_count){
       bb.push(JSON.parse(text)['block']);
       blockStr = JSON.stringify(JSON.parse(text)['block']);
         if (i == blocks_count) {
-        // var json_str = JSON.stringify(bb);
-        // createCookie('blocks', json_str);          
         localStorage.setItem('bb', JSON.stringify(bb));
         setBlocks(bb);
       }
