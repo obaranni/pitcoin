@@ -7,7 +7,7 @@ cycler==0.10.0
 ecdsa==0.13
 enum-compat==0.0.2
 Flask==1.0.2
-Flask-Cors==3.0.7
+Flask-Cors==3.0.9
 future==0.17.1
 idna==2.8
 itsdangerous==1.1.0
